@@ -14,7 +14,28 @@ namespace Server.Services
     {
 
         // hàm này liệt kê tiến trình hoặc app (2 hàm kế ở dưới hỗ trợ)
-        public List<ProcessInfo> ListRunningProcesses(bool isAppOnly = false)
+        public List<ProcessInfo> ListProcessOrApp(bool isAppOnly = false)
+        {
+            return ListRunningProcesses(isAppOnly);
+        }
+
+        public bool startProcessOrApp(string processPath)
+        {
+            return helperStartProcess(processPath);
+        }
+
+        public bool killProcessOrApp(int processId)
+        {
+            return helperKillProcessById(processId);
+        }
+
+
+         public bool shutdownOrRestart(bool isRestart)
+        {
+            return ShutdownComputer(isRestart);
+        }
+        
+        private List<ProcessInfo> ListRunningProcesses(bool isAppOnly = false)
         {
             List<ProcessInfo> list = new List<ProcessInfo>(); // 1 danh sách để chứa cái tiến trình
             Process[] allProcesses = Process.GetProcesses();  // lấy các tiến trình
@@ -94,7 +115,9 @@ namespace Server.Services
         }
 
         // Start process hoặc app
-        public bool StartProcess(string processPath)
+
+        
+        private bool helperStartProcess(string processPath)
         {
             if (string.IsNullOrEmpty(processPath)) return false;
 
@@ -146,7 +169,8 @@ namespace Server.Services
         }
 
         // Hàm này stop app, process
-        public bool KillProcessById(int processId)
+        
+        private bool helperKillProcessById(int processId)
         {
             try
             {
@@ -171,7 +195,9 @@ namespace Server.Services
 
 
         // Hàm này để restart, shutdown máy (Sử dụng lệnh hệ thống thay vì API)
-        public bool ShutdownComputer(bool isRestart)
+
+       
+        private bool ShutdownComputer(bool isRestart)
         {
             try
             {

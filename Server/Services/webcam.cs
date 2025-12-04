@@ -18,13 +18,14 @@ namespace Server.Services
         const int SM_CXSCREEN = 0;
         const int SM_CYSCREEN = 1;
 
-        // Hàm cap mh
-        public byte[] GetOneTimeSnapshot()
+        public byte[] CaptureScreen()
         {   
-            return CaptureScreen();
+            return helperCapScr();
         }
 
-        public byte[] CaptureScreen()
+
+        // hàm này là để chụp màn hình 
+        private byte[] helperCapScr()
         {
             try
             {
@@ -88,7 +89,7 @@ namespace Server.Services
             }
             return null;
         }
-        // Hàm tắt cam
+
         public void CloseWebcam()
         {
             if (_webcamCapture != null)
@@ -129,5 +130,30 @@ namespace Server.Services
             
             return true;
         }
+
+
+        // Hàm này capture 1 frame từ webcam
+        public byte[] CaptureWebcamFrame()
+        {
+            if (_webcamCapture == null || !_webcamCapture.IsOpened())
+            {
+                return null;
+            }
+            
+            using (Mat frame = new Mat())
+            {
+                if (!_webcamCapture.Read(frame) || frame.Empty())
+                {
+                    Console.WriteLine("Failed to read frame from webcam.");
+                    return null;
+                }
+
+                OpenCvSharp.Mat encodedFrame = new OpenCvSharp.Mat();
+                Cv2.ImEncode(".jpg", frame, encodedFrame);
+                
+                return encodedFrame.ToBytes();
+            }
+        }
+        
     }
 }
