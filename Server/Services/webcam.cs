@@ -1,57 +1,76 @@
 using System;
-using System.IO;
-using System.Text;
-using System.Runtime.InteropServices;
+using System.Collections.Generic; // Cần cho List
+using System.Diagnostics; // Cần cho Stopwatch
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading; // Cần cho CancellationToken
+using System.Threading.Tasks; // Cần cho Task
 using OpenCvSharp;
-using Server.Helper;
+using Server.helper; // Đảm bảo namespace này khớp với file ShellUtils.cs
 using static System.Runtime.InteropServices.RuntimeInformation;
 
 namespace Server.Services
 {
     public class WebcamService
     {
-        [DllImport("user32.dll")]
-        static extern int GetSystemMetrics(int nIndex);
-
-        const int SM_CXSCREEN = 0;
-        const int SM_CYSCREEN = 1;
-
-        public byte[] CaptureScreen()
-        {   
-            return helperCapScr();
+        // Đưa P/Invoke vào lớp riêng để tránh lỗi runtime trên Mac/Linux
+        private static class Win32Native
+        {
+            [DllImport("user32.dll")]
+            public static extern int GetSystemMetrics(int nIndex);
+            public const int SM_CXSCREEN = 0;
+            public const int SM_CYSCREEN = 1;
         }
 
+        private VideoCapture? _webcamCapture; // Thêm ? để tránh cảnh báo null
+
+        // --- PUBLIC API (Các hàm được gọi từ bên ngoài, ví dụ ControlHub) ---
+
+        // Hàm chụp ảnh màn hình (Snapshot)
+        public byte[] captureScreen()
+        {   
+            return CaptureScreenInternal();
+        }
+
+        // Hàm tắt webcam
         public void closeWebcam()
         {
-            helperCloseWebcam();
+            CloseWebcamInternal();
         }
 
+        // Hàm mở webcam (nếu cần gọi riêng)
         public bool OpenWebcam()
         {
-            return helperOpenWebcam();
+            return OpenWebcamInternal();
         }
 
-        public async Task<List<byte[]>> videoMakerManager(int frameRate, CancellationToken cancellationToken)
+        // Hàm yêu cầu quay video bằng chứng (Mở cam -> Quay 3s -> Giữ cam mở)
+        public async Task<List<byte[]>> RequestWebcamProof(int frameRate, CancellationToken cancellationToken) 
         {
-            return await helperVideoMakerManager(frameRate, cancellationToken);
+            return await videoMakerManager(frameRate, cancellationToken);
         }
 
 
-        // hàm này là để chụp màn hình 
-        private byte[] helperCapScr()
+        // --- PRIVATE HELPERS (Logic thực thi nội bộ) ---
+
+        // Logic thực sự của việc chụp màn hình
+        private byte[] CaptureScreenInternal()
         {
             try
             {
                 if (IsOSPlatform(OSPlatform.Windows))
                 {
-                    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-                    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+                    // Lấy kích thước qua lớp Win32Native an toàn
+                    int screenWidth = Win32Native.GetSystemMetrics(Win32Native.SM_CXSCREEN);
+                    int screenHeight = Win32Native.GetSystemMetrics(Win32Native.SM_CYSCREEN);
 
                     using (Bitmap bmp = new Bitmap(screenWidth, screenHeight))
                     using (Graphics g = Graphics.FromImage(bmp))
                     {
+                        // SỬA LỖI SIZE: Chỉ định rõ System.Drawing.Size
                         g.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(screenWidth, screenHeight), CopyPixelOperation.SourceCopy);
                         
                         using (MemoryStream ms = new MemoryStream())
@@ -63,24 +82,22 @@ namespace Server.Services
                 }
                 else if (IsOSPlatform(OSPlatform.OSX) || IsOSPlatform(OSPlatform.Linux))
                 {
-                    // Logic cho macOS/Linux (Dùng lệnh Shell gốc)
                     string tempFileName = Path.Combine(Path.GetTempPath(), $"screenshot_{Guid.NewGuid()}.jpg");
                     string shellCommand;
 
                     if (IsOSPlatform(OSPlatform.OSX))
                     {
-                        // Lệnh macOS: screencapture -t jpg [filepath]
                         shellCommand = $"screencapture -t jpg \"{tempFileName}\"";
                     }
                     else
                     {
-                        // Lệnh Linux: Dùng gnome-screenshot (yêu cầu môi trường desktop)
                         shellCommand = $"gnome-screenshot -f \"{tempFileName}\"";
                     }
 
+                    // Gọi ShellUtils (Cần đảm bảo file ShellUtils.cs có namespace Server.helper)
+                    // Đã sửa: Chỉ truyền 1 tham số command
                     ShellUtils.ExecuteShellCommand(shellCommand); 
                     
-                    // Đọc file ảnh tạm thời và xóa nó
                     if (File.Exists(tempFileName))
                     {
                         byte[] imageBytes = File.ReadAllBytes(tempFileName);
@@ -102,10 +119,11 @@ namespace Server.Services
             {
                 Console.WriteLine($"Error capturing screen: {ex.Message}");
             }
-            return null;
+            return Array.Empty<byte>();
         }
 
-        private void helperCloseWebcam()
+        // Logic đóng webcam
+        private void CloseWebcamInternal()
         {
             if (_webcamCapture != null)
             {
@@ -120,16 +138,17 @@ namespace Server.Services
             }
         }
 
-        private bool helperOpenWebcam()
+        // Logic mở webcam
+        private bool OpenWebcamInternal()
         {
-            if (_webcamCapture != null)
+            // Nếu đã mở thì dùng luôn
+            if (_webcamCapture != null && _webcamCapture.IsOpened())
             {
-                if (_webcamCapture.IsOpened())
-                {
-                    return true;
-                }
-                _webcamCapture.Dispose();
+                return true;
             }
+            
+            // Dispose cái cũ nếu có
+            _webcamCapture?.Dispose();
 
             _webcamCapture = new VideoCapture(0);   
 
@@ -146,9 +165,8 @@ namespace Server.Services
             return true;
         }
 
-
-        // Hàm này capture 1 frame từ webcam
-        private byte[] captureForVideo()
+        // Hàm hỗ trợ chụp 1 frame từ webcam
+        private byte[]? captureForVideo()
         {
             if (_webcamCapture == null || !_webcamCapture.IsOpened())
             {
@@ -163,40 +181,49 @@ namespace Server.Services
                     return null;
                 }
 
-                OpenCvSharp.Mat encodedFrame = new OpenCvSharp.Mat();
-                Cv2.ImEncode(".jpg", frame, encodedFrame);
+                // --- SỬA LỖI TẠI ĐÂY ---
+                // Thay vì dùng Mat encodedFrame, ta dùng out byte[] trực tiếp
+                // Hàm ImEncode trả về byte[] thông qua tham số out
                 
-                return encodedFrame.ToBytes();
+                byte[] encodedBytes;
+                if (Cv2.ImEncode(".jpg", frame, out encodedBytes))
+                {
+                    return encodedBytes;
+                }
+                
+                return null;
             }
         }
 
-        private async Task<List<byte[]>> helperVideoMakerManager(int frameRate, CancellationToken cancellationToken)
+        // Logic quản lý quy trình quay video bằng chứng
+        private async Task<List<byte[]>> videoMakerManager(int frameRate, CancellationToken cancellationToken)
         {
-            if (!OpenWebcam())
+            if (!OpenWebcamInternal())
             {
                 Console.WriteLine("Failed to open webcam for proof.");
                 return new List<byte[]>();
             }
 
             int durationMs = 3000; // 3 giây
-            List<byte[]> proofFrames = await videoMaker(durationMs, frameRate, cancellationToken);            
+            List<byte[]> proofFrames = await VideoMakerLoop(durationMs, frameRate, cancellationToken);            
             return proofFrames;
         }
 
-        private async Task<List<byte[]>> videoMaker(int durationMs, int frameRate, CancellationToken cancellationToken)
+        // Vòng lặp quay video
+        private async Task<List<byte[]>> VideoMakerLoop(int durationMs, int frameRate, CancellationToken cancellationToken)
         {
             List<byte[]> frames = new List<byte[]>();
             
             if (_webcamCapture == null || !_webcamCapture.IsOpened()) return frames;
 
-            int delayMs = 1000 / frameRate; // này là để coi đợi bao lâu thì chụp tiếp
+            int delayMs = 1000 / frameRate; 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             try
             {
                 while (stopwatch.ElapsedMilliseconds < durationMs && !cancellationToken.IsCancellationRequested)
                 {
-                    byte[] frameData = captureForVideo();
+                    byte[]? frameData = captureForVideo();
                     if (frameData != null && frameData.Length > 0) frames.Add(frameData);
                     await Task.Delay(delayMs, cancellationToken);
                 }
@@ -208,7 +235,5 @@ namespace Server.Services
 
             return frames;
         }
-        
-        
     }
 }

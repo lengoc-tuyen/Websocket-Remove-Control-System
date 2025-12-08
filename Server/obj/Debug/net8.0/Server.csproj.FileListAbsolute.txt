@@ -1,0 +1,7 @@
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.csproj.AssemblyReference.cache
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.GeneratedMSBuildEditorConfig.editorconfig
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.AssemblyInfoInputs.cache
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.AssemblyInfo.cs
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.csproj.CoreCompileInputs.cache
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.MvcApplicationPartsAssemblyInfo.cache
+/Users/lengoctuyen/Documents/Allmyproject/Websocket-_-Remove-Control-System/Server/obj/Debug/net8.0/Server.sourcelink.json

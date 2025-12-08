@@ -60,18 +60,18 @@ namespace Server.Hubs
 
         public async Task GetScreenshot()
         {
-            byte[] image = _webcamService.GetOneTimeSnapshot();
+            byte[] image = _webcamService.captureScreen();
             // Gửi ảnh về Client
             await Clients.Caller.SendAsync("ReceiveImage", "SCREENSHOT", image);
         }
 
         // Lệnh: Mở Webcam -> Quay 3s -> Gửi về -> Giữ cam mở
-        public async Task RequestWebcamProof()
+        public async Task RequestWebcam()
         {
             // Gửi thông báo đang xử lý
             await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đang quay video bằng chứng...");
 
-            var cancelToken = new CancellationTokenSource(5000).Token; // Timeout an toàn 5s
+            var cancelToken = new CancellationTokenSource(3000).Token; // Timeout an toàn 5s
             var frames = await _webcamService.RequestWebcamProof(10, cancelToken); // 10 FPS
 
             // Gửi từng frame hoặc gửi cả list (ở đây gửi từng frame cho mượt)

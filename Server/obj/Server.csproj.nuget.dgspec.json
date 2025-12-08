@@ -21,6 +21,7 @@
         ],
         "sources": {
           "/usr/local/share/dotnet/library-packs": {},
+          "/usr/local/share/dotnet/sdk/7.0.304/Sdks/Microsoft.NET.Sdk.Web/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,23 +46,19 @@
             },
             "OpenCvSharp4": {
               "target": "Package",
-              "version": "[4.8.0.20230708, )"
-            },
-            "OpenCvSharp4.runtime.osx": {
-              "target": "Package",
-              "version": "[4.8.0.20230708, )"
+              "version": "[4.9.0.20240103, )"
             },
             "OpenCvSharp4.runtime.win": {
               "target": "Package",
-              "version": "[4.8.0.20230708, )"
+              "version": "[4.9.0.20240103, )"
             },
             "SharpHook": {
               "target": "Package",
               "version": "[5.3.0, )"
             },
-            "SharpHook.Native": {
+            "System.Drawing.Common": {
               "target": "Package",
-              "version": "[5.3.0, )"
+              "version": "[7.0.0, )"
             }
           },
           "imports": [
@@ -76,6 +73,9 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
