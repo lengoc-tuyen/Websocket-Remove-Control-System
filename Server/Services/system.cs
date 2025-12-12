@@ -81,35 +81,45 @@ namespace Server.Services
         private List<ProcessInfo> GetAppsOnUnix(Process[] allProcesses)
         {
             List<ProcessInfo> apps = new List<ProcessInfo>();
-            
-            string psOutput = ShellUtils.ExecuteShellCommand("ps -axco pid"); // dùng lệnh ps.. để liệt kê tiến trình đang chạy
-            
-            //chúng ta sẽ chỉ lọc các tiến trình có tên App 
-            // mà không phải là các daemon hệ thống.
-            
+
+            var ignoreNames = new HashSet<string> { "zsh", "bash", "sh", "sudo", "su", "login", "launchd" }; // Mấy cái tiến trình hệ thống
+
             foreach (Process p in allProcesses)
             {   
                 try
                 {
-                    if (string.IsNullOrEmpty(p.MainWindowTitle)) continue; // bỏ mấy cái ko có title như win
+                    if (p.MainModule == null) continue;
+                    
+                    string path = p.MainModule.FileName;
+                    string name = p.ProcessName;
 
-                    // này kiểu lọc mấy cái tiến trình hệ thống
-                    if (p.MainModule?.FileName.StartsWith("/usr/bin/", StringComparison.OrdinalIgnoreCase) == true ||
-                        p.MainModule?.FileName.StartsWith("/sbin/", StringComparison.OrdinalIgnoreCase) == true)
+                    if (ignoreNames.Contains(name)) continue;
+
+                    bool isApp = false;
+
+                    if (path.StartsWith("/Applications/") || 
+                        path.StartsWith("/System/Applications/") || 
+                        path.StartsWith("/Users/") ||
+                        path.StartsWith("/Volumes/")) 
                     {
-                        continue;
+                        isApp = true;
                     }
 
-                    // 3. Đóng gói dữ liệu
-                    apps.Add(new ProcessInfo
+                    if (path.Contains(".app/")) isApp = true; // Kiểu có đuôi app thì khả năng rất cao là app
+
+                    if (isApp)
                     {
-                        Id = p.Id,
-                        Name = p.ProcessName,
-                        Title = p.MainWindowTitle,
-                        MemoryUsage = p.WorkingSet64
-                    });
+                        apps.Add(new ProcessInfo
+                        {
+                            Id = p.Id,
+                            Name = name,
+                            Title = name, 
+                            MemoryUsage = p.WorkingSet64
+                        });
+                    }
                 }
-                catch {}
+                catch 
+                {}
             }
             return apps.OrderBy(p => p.Name).ToList();
         }

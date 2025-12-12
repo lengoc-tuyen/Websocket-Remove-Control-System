@@ -1,15 +1,15 @@
 using System;
-using System.Collections.Generic; // Cần cho List
-using System.Diagnostics; // Cần cho Stopwatch
+using System.Collections.Generic; 
+using System.Diagnostics; 
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading; // Cần cho CancellationToken
-using System.Threading.Tasks; // Cần cho Task
+using System.Threading; 
+using System.Threading.Tasks; 
 using OpenCvSharp;
-using Server.helper; // Đảm bảo namespace này khớp với file ShellUtils.cs
+using Server.helper; 
 using static System.Runtime.InteropServices.RuntimeInformation;
 
 namespace Server.Services
