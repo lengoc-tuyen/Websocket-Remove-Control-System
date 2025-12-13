@@ -70,29 +70,40 @@
             </section>
 
             <section id="processesSection" style="display:none; flex:1;">
-                <div class="gift-box">
-                    <div class="gift-inner">
-                        <h2 style="font-size:15px; margin-bottom:6px;">⚙ Quản lý tiến trình (List / Stop)</h2>
-                        <div class="section-actions">
-                            <button class="btn btn-primary btn-sm" id="refreshProcessesBtn">Lấy danh sách Process</button>
-                            <button class="btn btn-outline btn-sm" id="stopSelectedProcessBtn">Stop Process</button>
-                        </div>
-                        <div style="max-height: 400px; overflow-y: auto; margin-top: 10px;">
-                            <table>
-                                <thead>
-                                <tr>
-                                    <th style="width:30px;">Chọn</th>
-                                    <th>PID</th>
-                                    <th>Tên tiến trình</th>
-                                    <th>RAM (MB)</th>
-                                </tr>
-                                </thead>
-                                <tbody id="processesTableBody"></tbody>
-                            </table>
-                        </div>
+            <div class="gift-box">
+                <div class="gift-inner">
+                    <h2 style="font-size:15px; margin-bottom:6px;">⚙ Quản lý tiến trình (List / Start / Stop)</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary btn-sm" id="refreshProcessesBtn">Lấy danh sách Process</button>
+
+                        <!-- NEW: nhập tên process -->
+                        <input type="text" id="processNameInput"
+                            placeholder="Tên Process (vd: chrome.exe)"
+                            class="text-black px-2 py-1 rounded text-sm"
+                            style="width: 170px;">
+
+                        <!-- NEW: nút Start Process -->
+                        <button class="btn btn-outline btn-sm" id="startProcessBtn">Start Process</button>
+
+                        <button class="btn btn-outline btn-sm" id="stopSelectedProcessBtn">Stop Process</button>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto; margin-top: 10px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:30px;">Chọn</th>
+                                <th>PID</th>
+                                <th>Tên tiến trình</th>
+                                <th>RAM (MB)</th>
+                            </tr>
+                            </thead>
+                            <tbody id="processesTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
+
 
             <section id="screenSection" style="display:none; flex:1;">
                 <div class="gift-box">
@@ -167,5 +178,12 @@
 
 <script src="ui.js"></script>
 <script src="connection.js"></script>
+
+<!-- Snowman Chatbot -->
+<div id="snowman-chatbot">
+    <div id="snowmanBubble" class="chat-bubble">Xin chào</div>
+    <img src="giphy.gif" alt="Snowman Chatbot" class="snowman-img">
+</div>
+
 </body>
 </html>

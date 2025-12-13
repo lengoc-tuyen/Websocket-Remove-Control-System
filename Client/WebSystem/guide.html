@@ -113,5 +113,55 @@
         <a href="ip.html" class="btn primary">Tiếp tục: Nhập địa chỉ IP ➜</a>
     </div>
 </div>
+   <!-- Tuyết rơi -->
+   <script>
+// ❄️ Hiệu ứng tuyết rơi dùng hình snow.png
+document.addEventListener("DOMContentLoaded", () => {
+    const snowflakes = [];
+    const numFlakes = 35; // muốn nhiều hơn thì tăng số này
+
+    for (let i = 0; i < numFlakes; i++) {
+        const flake = document.createElement("img");
+        flake.src = "image/snow.png";  // <-- hình bông tuyết của bạn
+        flake.className = "snowflake";
+        flake.style.position = "fixed";
+        flake.style.top = Math.random() * window.innerHeight + "px";
+        flake.style.left = Math.random() * window.innerWidth + "px";
+
+        // random size (20px → 50px)
+        const size = Math.floor(Math.random() * 30) + 10;
+        flake.style.width = size + "px";
+        flake.style.height = "auto";
+        flake.style.opacity = (Math.random() * 0.7 + 0.3).toString();
+
+        flake.style.pointerEvents = "none"; // Không ảnh hưởng click UI
+        document.body.appendChild(flake);
+        snowflakes.push(flake);
+    }
+
+    function animateSnowflakes() {
+        snowflakes.forEach((flake) => {
+            let top = parseFloat(flake.style.top);
+            let left = parseFloat(flake.style.left);
+
+            // Rơi xuống + rung nhẹ trái/phải
+            top += Math.random() * 1.5 + 0.8;
+            left += Math.sin(top / 45) * 0.6;
+
+            if (top > window.innerHeight) {
+                top = -50; // reset lên trên
+                left = Math.random() * window.innerWidth;
+            }
+
+            flake.style.top = top + "px";
+            flake.style.left = left + "px";
+        });
+
+        requestAnimationFrame(animateSnowflakes);
+    }
+
+    animateSnowflakes();
+});
+</script>
 </body>
 </html>

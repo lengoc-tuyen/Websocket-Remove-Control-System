@@ -79,3 +79,23 @@ function initTabs() {
 }
 
 initTabs();
+
+// Snowman chatbot greeting "Xin chào" every 5s
+const snowmanBubble = document.getElementById("snowmanBubble");
+
+if (snowmanBubble) {
+    function showGreeting() {
+        snowmanBubble.textContent = "Xin chào";
+        snowmanBubble.style.opacity = "1";
+        snowmanBubble.style.transform = "translateY(0)";
+
+        setTimeout(() => {
+            snowmanBubble.style.opacity = "0";
+            snowmanBubble.style.transform = "translateY(10px)";
+        }, 2000);
+    }
+
+    showGreeting();
+    setInterval(showGreeting, 5000);
+}
+

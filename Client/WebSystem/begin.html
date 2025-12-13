@@ -38,7 +38,7 @@
             height: 100%;
             overflow: hidden;
             /*background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));*/
-            background: url('home-bg.png') center/cover no-repeat fixed;
+            background: url('image/home-bg.png') center/cover no-repeat fixed;
             font-family: 'ChristmasFont', cursive; /* Áp dụng font toàn trang */
         }
 
@@ -196,6 +196,8 @@
 
     </style>
 </head>
+
+
 <body>
 
     <!-- Đồi tuyết -->
@@ -230,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let i = 0; i < numFlakes; i++) {
         const flake = document.createElement("img");
-        flake.src = "snow.png";  // <-- hình bông tuyết của bạn
+        flake.src = "image/snow.png";  // <-- hình bông tuyết của bạn
         flake.className = "snowflake";
         flake.style.position = "fixed";
         flake.style.top = Math.random() * window.innerHeight + "px";
@@ -271,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     animateSnowflakes();
 });
 </script>
+
 
 </body>
 </html>

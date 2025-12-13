@@ -9,7 +9,7 @@
 
         body {
             height: 100vh;
-            background: url("door-bg.jpg") center/cover no-repeat fixed;
+            background: url("image/door-bg.jpg") center/cover no-repeat fixed;
             font-family: system-ui, "Segoe UI", sans-serif;
             position: relative;
             overflow: hidden;
@@ -42,7 +42,7 @@
         .wreath {
             width: 260px;
             height: 260px;
-            background: url("wreath.png") center/contain no-repeat;
+            background: url("image/wreath.png") center/contain no-repeat;
             position: relative;
             display:flex;
             align-items:center;
@@ -202,7 +202,7 @@
 
         for (let i = 0; i < numFlakes; i++) {
             const img = document.createElement("img");
-            img.src = "snow.png";
+            img.src = "image/snow.png";
             img.className = "snowflake";
 
             const size = Math.random() * 25 + 20; // 20–45px
