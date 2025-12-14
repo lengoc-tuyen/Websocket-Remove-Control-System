@@ -300,6 +300,11 @@ function wireActionButtons() {
             });
         });
     }
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn && window.spaGoLogin) {
+        logoutBtn.addEventListener("click", () => { window.spaGoLogin();
+        });
+    }
 }
 
 // Gắn sự kiện cho nút Connect chính
@@ -311,4 +316,14 @@ if(toggleConnectBtn) {
 }
 
 // Khởi tạo các sự kiện khi trang web load xong
-document.addEventListener("DOMContentLoaded", wireActionButtons);
+//document.addEventListener("DOMContentLoaded", wireActionButtons);
+
+// Cho SPA gọi lại sau khi inject HTML
+window.initMainBindings = wireActionButtons;
+
+// Nếu chạy theo kiểu load trang bình thường thì vẫn ok
+if (document.readyState !== "loading") {
+  wireActionButtons();
+} else {
+  document.addEventListener("DOMContentLoaded", wireActionButtons);
+}
