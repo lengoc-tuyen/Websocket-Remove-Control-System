@@ -238,7 +238,7 @@ function wireActionButtons() {
     document.getElementById("webcamOnBtn").addEventListener("click", () => {
         if (checkConn()) {
             setStatus("Đang yêu cầu Webcam...");
-            connection.invoke("RequestWebcamProof");
+            connection.invoke("RequestWebcam");
         }
     });
 

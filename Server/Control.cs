@@ -153,7 +153,7 @@ namespace Server.Hubs
 
         public async Task GetScreenshot()
         {
-            if (!await IsAuthenticated()) return;
+            //if (!await IsAuthenticated()) return;
             byte[] image = _webcamService.captureScreen();
             // Gửi ảnh về Client
             await Clients.Caller.SendAsync("ReceiveImage", "SCREENSHOT", image);
@@ -162,26 +162,41 @@ namespace Server.Hubs
         // Lệnh: Mở Webcam -> Quay 3s -> Gửi về -> Giữ cam mở
         public async Task RequestWebcam()
         {
-            // Gửi thông báo đang xử lý
-            if (!await IsAuthenticated()) return;
-            await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đang quay video bằng chứng...");
+            await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đang quay video 10 giây...");
 
-            var cancelToken = new CancellationTokenSource(3000).Token; // Timeout an toàn 5s
-            var frames = await _webcamService.RequestWebcamProof(10, cancelToken); // 10 FPS
+            var token = Context.ConnectionAborted;
 
-            // Gửi từng frame hoặc gửi cả list (ở đây gửi từng frame cho mượt)
-            foreach (var frame in frames)
+            try
             {
-                await Clients.Caller.SendAsync("ReceiveImage", "WEBCAM_FRAME", frame);
-                await Task.Delay(100); // Giả lập phát lại
-            }
-            
-            await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đã gửi xong bằng chứng.");
-        }
+                // Gọi Service để quay (chờ khoảng 3s)
+                var frames = await _webcamService.RequestWebcam(10, token);
 
+                if (frames == null || frames.Count == 0)
+                {
+                    await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", false, "Lỗi: Không quay được frame nào (Cam lỗi hoặc bị chiếm).");
+                    return;
+                }
+
+                await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, $"Đang gửi {frames.Count} khung hình...");
+
+                // Gửi từng frame về Client
+                foreach (var frame in frames)
+                {
+                    await Clients.Caller.SendAsync("ReceiveImage", "WEBCAM_FRAME", frame);
+                    // Delay nhẹ để Client kịp hiển thị (tạo cảm giác như đang phát video)
+                    await Task.Delay(100); 
+                }
+                
+                await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đã gửi xong video.");
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", false, "Lỗi Server: " + ex.Message);
+            }
+        }
         public async Task CloseWebcam()
         {
-            if (!await IsAuthenticated()) return;
+            //if (!await IsAuthenticated()) return;
             _webcamService.closeWebcam();
             await Clients.Caller.SendAsync("ReceiveStatus", "WEBCAM", true, "Đã đóng Webcam.");
         }
