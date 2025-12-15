@@ -16,8 +16,8 @@ using OpenCvSharp;
 // Thêm thư viện
 //using System.Drawing;
 //using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
+// using System.IO;
+// using System.Linq;
 using System.Windows.Forms;
 
 namespace Server.Services
@@ -497,28 +497,41 @@ namespace Server.Services
         //     } catch { return Array.Empty<byte>(); }
         // }
 
+
         private byte[] CaptureScreenWindows()
-{
-    try
-    {
-        // Lấy toàn bộ vùng desktop (gồm mọi màn hình)
-        var bounds = SystemInformation.VirtualScreen; // X/Y có thể âm
+        {
+            try
+            {
+                // ✅ Lấy toàn bộ desktop thật (mọi màn hình, kể cả tọa độ âm)
+                var bounds = SystemInformation.VirtualScreen;
 
-        using var bmp = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format24bppRgb);
-        using var g = Graphics.FromImage(bmp);
+                using var bmp = new Bitmap(
+                    bounds.Width,
+                    bounds.Height,
+                    PixelFormat.Format24bppRgb
+                );
 
-        // Chụp bắt đầu từ tọa độ gốc thật của desktop (có thể âm)
-        g.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size, CopyPixelOperation.SourceCopy);
+                using var g = Graphics.FromImage(bmp);
 
-        using var ms = new MemoryStream();
-        bmp.Save(ms, ImageFormat.Jpeg); // hoặc PNG nếu bạn muốn rõ chữ hơn
-        return ms.ToArray();
-    }
-    catch
-    {
-        return Array.Empty<byte>();
-    }
-}
+                // ⚠️ Quan trọng: phải chụp từ bounds.X / bounds.Y
+                g.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size,
+                    CopyPixelOperation.SourceCopy
+                );
+
+                using var ms = new MemoryStream();
+
+                // (tuỳ chọn) giảm dung lượng ảnh
+                bmp.Save(ms, ImageFormat.Jpeg);
+
+                return ms.ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CaptureScreenWindows failed");
+                return Array.Empty<byte>();
+            }
+        }
+
 
         private byte[] CaptureScreenMacOS()
         {
