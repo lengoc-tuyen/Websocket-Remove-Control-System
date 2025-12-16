@@ -173,6 +173,9 @@
             .wreath { width: 220px; height: 220px; }
         }
     </style>
+
+<!-- Snowman Chatbot CSS -->
+<link rel="stylesheet" href="Chatbot/chatbot.css">
 </head>
 <body>
 
@@ -274,6 +277,38 @@
         if (e.key === "Enter") btn.click();
     });
 </script>
+
+<!-- Snowman Chatbot -->
+<div id="snowman-chatbot">
+    <div id="snowmanBubble" class="chat-bubble">Xin chào</div>
+    <img src="giphy.gif" alt="Snowman Chatbot" class="snowman-img" id="snowman-img">
+</div>
+
+<!-- Chat Window -->
+<div id="chat-window">
+    <div class="chat-header">
+        <span>☃️ Snowman AI</span>
+        <button onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-body" id="chat-messages">
+        <div class="msg-bot">Mình có thể giúp gì cho bạn? 🎄</div>
+    </div>
+
+    <div class="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Hỏi gì đó..." />
+        <button onclick="sendChatUI()">Gửi</button>
+    </div>
+</div>
+
+<!-- API Config (load đầu tiên) -->
+<script type="module" src="Chatbot/config.js"></script>
+
+<!-- AI Script (phải load trước) -->
+<script type="module" src="Chatbot/InforOfChatBot.js"></script>
+
+<!-- Snowman Chatbot Script -->
+<script src="Chatbot/chatbot.js"></script>
 
 </body>
 </html>

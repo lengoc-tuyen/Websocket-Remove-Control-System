@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using SharpHook;
 using SharpHook.Native;
-using SharpHook.Data;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -10,7 +9,7 @@ namespace Server.Services
 {
     public class InputService : IDisposable
     {
-        private EventLoopGlobalHook? _hook;
+        private TaskPoolGlobalHook? _hook;
         private bool _isRunning = false;
         private Func<string, Task>? _onKeyDataReceived;
         private ConcurrentQueue<string> _keyQueue = new ConcurrentQueue<string>();
@@ -34,7 +33,7 @@ namespace Server.Services
             _isRunning = true;
             _cts = new CancellationTokenSource();
 
-            _hook = new EventLoopGlobalHook();
+            _hook = new TaskPoolGlobalHook();
             Console.Error.WriteLine("Hook instance created");
             
             // Đăng ký event handlers

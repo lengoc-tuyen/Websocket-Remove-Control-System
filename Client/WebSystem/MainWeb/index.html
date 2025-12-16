@@ -5,6 +5,10 @@
     <title>Trang chính – Christmas LAN Remote</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
+    
+    <!-- Snowman Chatbot CSS -->
+    <link rel="stylesheet" href="../Chatbot/chatbot.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
 <body>
@@ -176,38 +180,40 @@
     <span id="lastUpdated" style="color: #9ca3af;"></span>
 </div>
 
+<!-- API Config (load đầu tiên) -->
+<script type="module" src="../Chatbot/config.js"></script>
 
+<!-- AI Script (phải load trước ui.js) -->
+<script type="module" src="../Chatbot/InforOfChatBot.js"></script>
+
+<!-- Snowman Chatbot Script (phải load trước ui.js) -->
+<script src="../Chatbot/chatbot.js"></script>
+
+<script src="ui.js"></script> 
+<script src="connection.js"></script>
 
 <!-- Snowman Chatbot -->
 <div id="snowman-chatbot">
     <div id="snowmanBubble" class="chat-bubble">Xin chào</div>
-    <img src="giphy.gif" alt="Snowman Chatbot" class="snowman-img">
+    <img src="giphy.gif" alt="Snowman Chatbot" class="snowman-img" id="snowman-img">
 </div>
 
 <!-- Chat Window -->
 <div id="chat-window">
-  <div class="chat-header">
-    <span>☃️ Snowman AI</span>
-    <button onclick="toggleChat()">✕</button>
-  </div>
+    <div class="chat-header">
+        <span>☃️ Snowman AI</span>
+        <button onclick="toggleChat()">✕</button>
+    </div>
 
-  <div class="chat-body" id="chat-messages">
-    <div class="msg-bot">Mình có thể giúp gì cho bạn?</div>
-  </div>
+    <div class="chat-body" id="chat-messages">
+        <div class="msg-bot">Mình có thể giúp gì cho bạn? 🎄</div>
+    </div>
 
-  <div class="chat-input-area">
-    <input
-      id="chat-input"
-      type="text"
-      placeholder="Hỏi gì đó..."
-      onkeydown="if(event.key==='Enter') sendChatUI()"
-    />
-    <button onclick="sendChatUI()">Gửi</button>
-  </div>
+    <div class="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Hỏi gì đó..." />
+        <button onclick="sendChatUI()">Gửi</button>
+    </div>
 </div>
-
-<script src="ui.js"></script>
-<script src="connection.js"></script>
 
 </body>
 </html>

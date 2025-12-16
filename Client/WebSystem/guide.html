@@ -277,6 +277,9 @@
 }
 
     </style>
+
+<!-- Snowman Chatbot CSS -->
+<link rel="stylesheet" href="Chatbot/chatbot.css">
 </head>
 <body>
 <div class="card">
@@ -368,114 +371,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- Snowman Chatbot -->
 <div id="snowman-chatbot">
-  <div id="snowmanBubble" class="chat-bubble">Xin chào</div>
-  <img src="MainWeb/giphy.gif" alt="Snowman Chatbot" class="snowman-img" onclick="toggleChat()">
+    <div id="snowmanBubble" class="chat-bubble">Xin chào</div>
+    <img src="giphy.gif" alt="Snowman Chatbot" class="snowman-img" id="snowman-img">
 </div>
 
+<!-- Chat Window -->
 <div id="chat-window">
-  <div class="chat-header">
-    <span>☃️ Snowman AI</span>
-    <button onclick="toggleChat()">✕</button>
-  </div>
+    <div class="chat-header">
+        <span>☃️ Snowman AI</span>
+        <button onclick="toggleChat()">✕</button>
+    </div>
 
-  <div class="chat-body" id="chat-messages">
-    <div class="msg-bot">Mình có thể giúp gì cho bạn?</div>
-  </div>
+    <div class="chat-body" id="chat-messages">
+        <div class="msg-bot">Mình có thể giúp gì cho bạn? 🎄</div>
+    </div>
 
-  <div class="chat-input-area">
-    <input id="chat-input" type="text" placeholder="Hỏi gì đó..."
-           onkeydown="if(event.key==='Enter') sendChatUI()" />
-    <button onclick="sendChatUI()">Gửi</button>
-  </div>
+    <div class="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Hỏi gì đó..." />
+        <button onclick="sendChatUI()">Gửi</button>
+    </div>
 </div>
 
-<script>
-  (function () {
-    const bubble = document.getElementById("snowmanBubble");
-    const img = document.querySelector("#snowman-chatbot .snowman-img");
-    if (!bubble) return;
+<!-- API Config (load đầu tiên) -->
+<script type="module" src="Chatbot/config.js"></script>
 
-    function showHello() {
-      bubble.textContent = "Xin chào";
-      bubble.style.opacity = "1";
-      bubble.style.transform = "translateY(0)";
-      setTimeout(() => {
-        bubble.style.opacity = "0";
-        bubble.style.transform = "translateY(10px)";
-      }, 2000);
-    }
+<!-- AI Script (phải load trước) -->
+<script type="module" src="Chatbot/InforOfChatBot.js"></script>
 
-    // hiện 1 lần khi vào trang
-    showHello();
-    // lặp mỗi 5s
-    setInterval(showHello, 5000);
-
-    // (Tuỳ chọn) click snowman -> hiện 1 câu khác
-    if (img) {
-      img.addEventListener("click", () => {
-        bubble.textContent = "Bạn cần mình giúp gì nè? 🤖";
-        bubble.style.opacity = "1";
-        bubble.style.transform = "translateY(0)";
-        setTimeout(() => {
-          bubble.style.opacity = "0";
-          bubble.style.transform = "translateY(10px)";
-        }, 2500);
-      });
-    }
-  })();
-</script>
-
-<script>
-  function toggleChat() {
-    const chat = document.getElementById("chat-window");
-    if (!chat) return;
-
-    const isOpen = chat.classList.contains("open");
-    if (isOpen) {
-      chat.classList.remove("open");
-      // display:none sau khi animation xong
-      setTimeout(() => { if (!chat.classList.contains("open")) chat.style.display = "none"; }, 180);
-    } else {
-      chat.style.display = "flex";
-      requestAnimationFrame(() => chat.classList.add("open"));
-      // focus input
-      const input = document.getElementById("chat-input");
-      if (input) setTimeout(() => input.focus(), 100);
-    }
-  }
-
-  function sendChatUI() {
-    const input = document.getElementById("chat-input");
-    const box = document.getElementById("chat-messages");
-    if (!input || !box) return;
-
-    const text = (input.value || "").trim();
-    if (!text) return;
-
-    // add user bubble
-    const userMsg = document.createElement("div");
-    userMsg.className = "msg-user";
-    userMsg.textContent = text;
-    box.appendChild(userMsg);
-
-    input.value = "";
-
-    // TODO: chỗ này bạn gắn WebSocket gửi đi (nếu có)
-    // sendToServer(text);
-
-    // demo bot reply (để nhìn UI đẹp)
-    const botMsg = document.createElement("div");
-    botMsg.className = "msg-bot";
-    botMsg.textContent = "Mình nhận được rồi nè ☃️";
-    setTimeout(() => {
-      box.appendChild(botMsg);
-      box.scrollTop = box.scrollHeight;
-    }, 250);
-
-    box.scrollTop = box.scrollHeight;
-  }
-</script>
-
+<!-- Snowman Chatbot Script -->
+<script src="Chatbot/chatbot.js"></script>
 
 </body>
 </html>
