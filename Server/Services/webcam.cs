@@ -18,7 +18,7 @@ using OpenCvSharp;
 //using System.Drawing.Imaging;
 // using System.IO;
 // using System.Linq;
-using System.Windows.Forms;
+// using System.Windows.Forms; // Chỉ cần trên Windows
 
 namespace Server.Services
 {
@@ -503,24 +503,19 @@ namespace Server.Services
             try
             {
                 // ✅ Lấy toàn bộ desktop thật (mọi màn hình, kể cả tọa độ âm)
-                var bounds = SystemInformation.VirtualScreen;
+                // Lấy kích thước màn hình bằng Win32 API thay vì SystemInformation
+                int w = Win32Native.GetSystemMetrics(Win32Native.SM_CXSCREEN);
+                int h = Win32Native.GetSystemMetrics(Win32Native.SM_CYSCREEN);
 
-                using var bmp = new Bitmap(
-                    bounds.Width,
-                    bounds.Height,
-                    PixelFormat.Format24bppRgb
-                );
-
+                using var bmp = new Bitmap(w, h, PixelFormat.Format24bppRgb);
                 using var g = Graphics.FromImage(bmp);
 
-                // ⚠️ Quan trọng: phải chụp từ bounds.X / bounds.Y
-                g.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size,
+                // Chụp từ góc (0,0) - màn hình chính
+                g.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(w, h),
                     CopyPixelOperation.SourceCopy
                 );
 
                 using var ms = new MemoryStream();
-
-                // (tuỳ chọn) giảm dung lượng ảnh
                 bmp.Save(ms, ImageFormat.Jpeg);
 
                 return ms.ToArray();
