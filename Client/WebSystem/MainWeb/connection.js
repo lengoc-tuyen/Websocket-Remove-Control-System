@@ -33,6 +33,9 @@ async function connect() {
     const finalUrl = buildConnectionUrl(rawIp);
 
     setStatus("Đang kết nối tới: " + finalUrl);
+    
+    // [FIX LỖI FLOW] Hiển thị LOADING_MESSAGE ngay lập tức khi bắt đầu kết nối
+    handleServerStatus("LOADING_WAIT");
 
     connection = new signalR.HubConnectionBuilder()
         .withUrl(finalUrl)
@@ -77,7 +80,7 @@ async function connect() {
             setStatus("Đã nhận ảnh màn hình.");
         } 
         // [FIX] Cập nhật logic Webcam để xử lý LIVE_AND_PROOF (tương thích với Hub mới)
-        else if (type === "LIVE_FRAME" || type === "LIVE_AND_PROOF") {
+        else if (type === "WEBCAM_FRAME") {
              if (cam) {
                 cam.src = src;
                 cam.style.display = 'block';
@@ -96,12 +99,8 @@ async function connect() {
         area.scrollTop = area.scrollHeight;
     });
 
-    connection.on("ReceiveChatMessage", (message) => {
-        if (window.ui && window.ui.addChatMessage) {
-            ui.showTyping(false);
-            ui.addChatMessage(message, 'bot');
-        }
-   });
+    // [XÓA LISTENER CHAT AI CŨ] Không cần listener này nữa vì AI chạy Client-side
+    // connection.on("ReceiveChatMessage", (message) => { ... });
 
     try {
         await connection.start();
@@ -162,7 +161,13 @@ function handleServerStatus(status) {
         // 1. Đăng nhập thành công -> Chuyển sang Dashboard
         authScreen.style.display = 'none';
         mainScreen.style.display = 'flex'; 
-    } else {
+    } else if (status === "LOADING_WAIT") {
+        // [THÊM LOGIC] Trạng thái chờ kết nối (sau khi bấm Connect)
+        authScreen.style.display = 'flex';
+        mainScreen.style.display = 'none';
+        loadingMsg.classList.remove('hidden'); 
+    }
+     else {
         // 2. Cần xác thực -> Hiện màn hình Auth và form tương ứng
         authScreen.style.display = 'flex';
         mainScreen.style.display = 'none';
@@ -211,11 +216,16 @@ async function submitSetupCode() {
 }
 
 async function registerUser() {
-    if (!checkConn()) return;
+    console.log("Attempting registration..."); // [THÊM DEBUG LOG]
+    if (!checkConn()) {
+        console.error("Registration attempt failed: Not connected (isConnected = false)."); // [THÊM DEBUG LOG]
+        return;
+    }
     const u = document.getElementById('reg-username').value;
     const p = document.getElementById('reg-password').value;
     if(u && p) {
         setStatus("Đang đăng ký tài khoản...");
+        console.log("Invoking RegisterUser Hub method..."); // [THÊM DEBUG LOG]
         await connection.invoke("RegisterUser", u, p);
     } else {
         alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
@@ -223,11 +233,16 @@ async function registerUser() {
 }
 
 async function loginUser() {
-    if (!checkConn()) return;
+    console.log("Attempting login...");
+    if (!checkConn()) {
+        console.error("Login attempt failed: Not connected (isConnected = false).");
+        return;
+    }
     const u = document.getElementById('login-username').value;
     const p = document.getElementById('login-password').value;
     if(u && p) {
         setStatus("Đang xác thực đăng nhập...");
+        console.log("Invoking Login Hub method...");
         await connection.invoke("Login", u, p);
     } else {
         alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
@@ -258,6 +273,7 @@ function wireActionButtons() {
     if(btnSetup) btnSetup.addEventListener("click", submitSetupCode);
 
     const btnReg = document.getElementById("btn-submit-register");
+    // [FIX LỖI CHẮC CHẮN] Nút Hoàn tất Đăng kí đã được gắn sự kiện bằng cả addEventListener và onclick trong HTML.
     if(btnReg) btnReg.addEventListener("click", registerUser);
 
     const btnLogin = document.getElementById("btn-submit-login");
@@ -283,28 +299,32 @@ function wireActionButtons() {
     });
 
     document.getElementById("startAppBtn").addEventListener("click", () => {
-        const name = document.getElementById("appNameInput").value;
-        if (checkConn() && name) connection.invoke("StartProcess", name);
-        else if (!name) alert("Vui lòng nhập tên ứng dụng!");
+        if (checkConn()) {
+            const name = document.getElementById("appNameInput").value;
+            if (name) connection.invoke("StartProcess", name);
+            else alert("Vui lòng nhập tên ứng dụng!");
+        }
     });
 
     document.getElementById("startProcessBtn").addEventListener("click", () => {
-        const name = document.getElementById("processNameInput").value;
-        if (checkConn() && name) connection.invoke("StartProcess", name);
-        else if (!name) alert("Vui lòng nhập tên hoặc đường dẫn Process!");
+        if (checkConn()) {
+            const name = document.getElementById("processNameInput").value;
+            if (name) connection.invoke("StartProcess", name);
+            else alert("Vui lòng nhập tên hoặc đường dẫn Process!");
+        }
     });
 
     document.getElementById("stopSelectedAppBtn").addEventListener("click", () => {
-        const id = getSelectedId("selectedApp");
         if (checkConn()) {
+            const id = getSelectedId("selectedApp");
             if (id) connection.invoke("KillProcess", id);
             else alert("Vui lòng chọn một App trong danh sách!");
         }
     });
 
     document.getElementById("stopSelectedProcessBtn").addEventListener("click", () => {
-        const id = getSelectedId("selectedProcess");
         if (checkConn()) {
+            const id = getSelectedId("selectedProcess");
             if (id) connection.invoke("KillProcess", id);
             else alert("Vui lòng chọn một Process trong danh sách!");
         }
@@ -317,11 +337,8 @@ function wireActionButtons() {
         }
     });
     
-    // [SỬA LỚN] Logic Webcam ON (Thêm logic Proof Frames)
     document.getElementById("webcamOnBtn").addEventListener("click", () => {
         if (checkConn()) {
-            // [THÊM LOGIC PROOF] Reset bộ nhớ và dừng phát lại cũ
-            proofFrames = [];
             if (playbackInterval) clearInterval(playbackInterval);
 
             setStatus("Đang yêu cầu Webcam...");
@@ -329,7 +346,7 @@ function wireActionButtons() {
         }
     });
 
-    // [SỬA LỚN] Logic Webcam OFF (Thêm logic Phát lại Proof Frames)
+    // Logic Webcam OFF (Thêm logic Phát lại Proof Frames)
     document.getElementById("webcamOffBtn").addEventListener("click", () => {
         if (checkConn()) {
              connection.invoke("CloseWebcam"); 
@@ -382,19 +399,25 @@ function wireActionButtons() {
             }
             input.value = "";
 
-            // 2. Check kết nối
-            if (!isConnected) {
-                if(window.ui) ui.addChatMessage("⚠️ Chưa kết nối Server!", 'bot');
+            // 2. Check xem dịch vụ AI độc lập đã tải chưa (ai_service.js)
+            if (!window.chatWithGemini) {
+                // [FIX LỖI AI] Sử dụng logic báo lỗi AI chưa tải
+                if(window.ui) ui.addChatMessage("⚠️ Dịch vụ Snowie AI chưa được tải (Vui lòng kiểm tra file ai_service.js)!", 'bot');
                 return;
             }
 
-            // 3. Gửi lên Server (Logic Chat AI cũ - dùng Server Hub)
+            // 3. Gửi lên AI Service (Client-side)
             if(window.ui) ui.showTyping(true);
             
-            connection.invoke("ChatWithAi", text).catch(err => {
+            window.chatWithGemini(text).then(botResponse => {
                 if(window.ui) {
                     ui.showTyping(false);
-                    ui.addChatMessage("Lỗi: " + err.toString(), 'bot');
+                    ui.addChatMessage(botResponse, 'bot');
+                }
+            }).catch(err => {
+                if(window.ui) {
+                    ui.showTyping(false);
+                    ui.addChatMessage("Lỗi AI: " + err.toString(), 'bot');
                 }
             });
         });

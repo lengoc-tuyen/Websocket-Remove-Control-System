@@ -234,6 +234,15 @@
             .wreath-wrap { top: 22vh; }
             .wreath { width: 220px; height: 220px; }
         }
+        
+        /* Nút chuyển đổi form */
+        .auth-toggle-link {
+            margin-top: 15px;
+            color: #facc15;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 
     <link rel="stylesheet" href="../Chatbot/chatbot.css">
@@ -294,9 +303,11 @@
     <!-- 1. FORM SETUP (Yêu cầu Master Code) -->
     <div id="setup-form" class="auth-card hidden">
         <h2>🔑 Master Setup Code</h2>
-        <p style="color:#facc15; margin-bottom: 20px;">Nhập mã khóa để xác nhận quyền đăng ký tài khoản mới.</p>
+        <p style="color:#facc15; margin-bottom: 20px;">Nhập mã khóa để Đăng ký tài khoản mới.</p>
         <input type="password" id="master-code" placeholder="Master Code" onkeydown="if(event.key==='Enter') submitSetupCode()"/>
         <button class="btn btn-warning" id="btn-submit-setup">Xác nhận Master Code</button>
+        <!-- [THÊM NÚT CHUYỂN ĐỔI] -->
+        <div class="auth-toggle-link" onclick="showLoginForm()">Quay lại Đăng nhập</div>
     </div>
 
     <!-- 2. FORM REGISTER (Đăng ký tài khoản) -->
@@ -305,7 +316,7 @@
         <p style="color:#388E3C; margin-bottom: 10px;">Đã xác nhận Master Code. Tạo tài khoản để truy cập!</p>
         <input type="text" id="reg-username" placeholder="Tên đăng nhập" />
         <input type="password" id="reg-password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter') registerUser()"/>
-        <button class="btn btn-success" id="btn-submit-register">Hoàn tất Đăng Ký</button>
+        <button class="btn btn-success" id="btn-submit-register" onclick="registerUser()">Hoàn tất Đăng Ký</button>
     </div>
 
     <!-- 3. FORM LOGIN (Đăng nhập) -->
@@ -315,9 +326,8 @@
         <input type="text" id="login-username" placeholder="Tên đăng nhập" />
         <input type="password" id="login-password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter') loginUser()"/>
         <button class="btn btn-primary" id="btn-submit-login">Đăng Nhập</button>
-        <p style="margin-top: 15px; color:#9ca3af; font-size: 0.85em;">
-            Chưa có tài khoản? Ngắt kết nối, nhập Master Code để đăng ký.
-        </p>
+        <!-- [THÊM NÚT CHUYỂN ĐỔI] -->
+        <div class="auth-toggle-link" onclick="showSetupForm()">Đăng ký tài khoản mới (cần Master Code)</div>
     </div>
 </div>
 
@@ -610,67 +620,31 @@
             if (e.key === "Enter") btnWreath.click();
         });
         
-        // --- LOGIC CHATBOT (Để HTML gọi trực tiếp) ---
-        // [KHÔNG BỊ LẶP] Hàm gửi chat từ UI (Cần định nghĩa ở đây để HTML gọi được)
-        window.sendChatUI = async function() {
-            const input = document.getElementById("chat-input");
-            const text = input.value.trim();
-            if (!text || !window.chatWithGemini) return; 
-
-            if(window.ui && window.ui.addChatMessage) {
-                window.ui.addChatMessage(text, 'user');
-            }
-            input.value = "";
-            
-            if(window.ui) window.ui.showTyping(true);
-
-            const botResponse = await window.chatWithGemini(text);
-
-            if(window.ui) {
-                window.ui.showTyping(false);
-                window.ui.addChatMessage(botResponse, 'bot');
-            }
+        // --- LOGIC CHUYỂN ĐỔI UI (Đã chuyển từ connection.js để đảm bảo tính khả dụng) ---
+        
+        // Hàm ẩn tất cả form Auth (trừ loading)
+        function hideAllAuthForms() {
+            const forms = ['setup-form', 'register-form', 'login-form'];
+            forms.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+        }
+        
+        // [THÊM] Hàm chuyển đổi sang Form Login
+        window.showLoginForm = function() {
+            hideAllAuthForms();
+            const loginForm = document.getElementById('login-form');
+            if(loginForm) loginForm.classList.remove('hidden');
+        }
+        
+        // [THÊM] Hàm chuyển đổi sang Form Setup (Master Code)
+        window.showSetupForm = function() {
+            hideAllAuthForms();
+            const setupForm = document.getElementById('setup-form');
+            if(setupForm) setupForm.classList.remove('hidden');
         }
 
-        // [KHÔNG BỊ LẶP] Hàm toggleChat để ẩn hiện khung chat (Cần định nghĩa ở đây)
-        window.toggleChat = function() {
-            const chatWindow = document.getElementById('chat-window');
-            const avatar = document.getElementById('snowman-avatar');
-            const bubble = document.getElementById("snowmanBubble");
-
-            if (!chatWindow) return;
-
-            if (chatWindow.style.display === "none" || chatWindow.style.display === "") {
-                chatWindow.style.display = 'flex'; 
-                if (bubble) bubble.style.opacity = "0"; 
-                if (avatar) avatar.style.transform = 'scale(1.1)'; 
-            } else {
-                chatWindow.style.display = 'none'; 
-                if (avatar) avatar.style.transform = 'scale(1)';
-            }
-        }
-
-        // [KHÔNG BỊ LẶP] Logic Bong bóng chào ban đầu
-        const bubble = document.getElementById("snowmanBubble");
-        if (bubble) {
-            function showHello() {
-                const chatWindow = document.getElementById('chat-window');
-                if (chatWindow && chatWindow.style.display === 'flex') {
-                    bubble.style.opacity = "0";
-                    return;
-                }
-
-                bubble.textContent = "Hỏi tôi nhé!";
-                bubble.style.opacity = "1";
-                bubble.style.transform = "translateX(-50%) translateY(0)"; 
-                setTimeout(() => {
-                    bubble.style.opacity = "0";
-                    bubble.style.transform = "translateX(-50%) translateY(10px)";
-                }, 3000);
-            }
-            showHello();
-            setInterval(showHello, 7000); 
-        }
     });
 
 </script>
