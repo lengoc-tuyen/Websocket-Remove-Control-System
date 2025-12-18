@@ -13,7 +13,7 @@ body {
 header {
     background: #064e3b;
     color: #f9fafb;
-    padding: 8px 16px;
+    padding: 30px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -21,11 +21,18 @@ header {
 }
 
 .app-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
 }
 
-.app-title span { color: #f97316; }
+.lan-text {
+    color: #e44848;        /* cam nổi */
+    font-weight: 900;
+}
+
+
+
 
 .header-right {
     display: flex;
@@ -93,3 +100,43 @@ th { background: #020617; }
 .status-bar { background: #0b1120; color: #e5e7eb; font-size: 12px; padding: 5px 10px; border-top: 1px solid rgba(15,23,42,0.9); display: flex; justify-content: space-between;}
 
 /* All Chatbot CSS moved to ../Chatbot/chatbot.css */
+
+/* ===== Input đẹp dùng chung (App + Process) ===== */
+.app-input{
+  height: 38px;
+  width: 210px;              /* có thể chỉnh 210–260 */
+  padding: 0 14px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.22);
+
+  background: rgba(15, 23, 42, 0.70);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+
+  outline: none;
+  transition: all .18s ease;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 8px 18px rgba(0,0,0,0.35);
+}
+
+.app-input::placeholder{
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+
+.app-input:hover{
+  border-color: rgba(255,255,255,0.40);
+}
+
+.app-input:focus{
+  border-color: #f97316;
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow:
+    0 0 0 3px rgba(249,115,22,0.30),
+    0 10px 22px rgba(0,0,0,0.45);
+}
+

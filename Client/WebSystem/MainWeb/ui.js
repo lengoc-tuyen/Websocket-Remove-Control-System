@@ -37,20 +37,29 @@ function renderTable(tbodyId, data, groupName) {
     const tbody = document.getElementById(tbodyId);
     tbody.innerHTML = "";
 
+    
+
+
     if (data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:10px;'>Không có dữ liệu</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:10px;'>Không có dữ liệu</td></tr>";
         return;
     }
 
     data.forEach((p) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td style="text-align:center;"><input type="radio" name="${groupName}" value="${p.id}"></td>
-            <td>${p.id}</td>
-            <td style="font-weight:bold; color:#2563eb;">${p.name}</td>
-            <td>${p.title || '-'}</td>
-            <td>${(p.memoryUsage / 1024 / 1024).toFixed(1)}</td>
-        `;
+        <td style="text-align:center;">
+            <input type="radio" name="${groupName}" value="${p.id}">
+        </td>
+        <td>${p.id}</td>
+        <td style="font-weight:bold; color:#2563eb;">
+            ${p.name}
+        </td>
+        <td>
+            ${(p.memoryUsage / 1024 / 1024).toFixed(1)}
+        </td>
+    `;
+
         tbody.appendChild(tr);
     });
 }

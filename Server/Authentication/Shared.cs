@@ -23,7 +23,7 @@ namespace Server.Shared
     public static class ErrorMessages
     {
         public const string SetupCodeInvalid = "Mã Master Code không đúng.";
-        public const string RegistrationNotAllowed = "Bạn chưa nhập Master Code hoặc đã hoàn tất đăng ký.";
+        public const string RegistrationNotAllowed = "Chào mừng, bạn đã đăng ký thành công.";
         public const string UsernameTaken = "Tên đăng nhập đã tồn tại.";
         public const string InvalidCredentials = "Tên đăng nhập hoặc mật khẩu không đúng.";
     }

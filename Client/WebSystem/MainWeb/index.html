@@ -24,7 +24,7 @@
         #initial-connect-overlay {
             position: fixed;
             inset: 0;
-            background: url("image/door-bg.jpg") center/cover no-repeat fixed;
+            background: url("/image/door-bg.jpg") center/cover no-repeat fixed;
             z-index: 2000; /* Luôn nằm trên cùng */
             transition: opacity 0.8s ease-in-out;
         }
@@ -54,7 +54,7 @@
         .wreath {
             width: 260px;
             height: 260px;
-            background: url("image/wreath.png") center/contain no-repeat;
+            background: url("../image/wreath.png") center/contain no-repeat;
             position: relative;
             display:flex;
             align-items:center;
@@ -257,17 +257,17 @@
         <div class="wreath">
             <div class="wreath-inner">
                 <input type="text" id="ipInputWreath" placeholder="192.168.1.10:3000" value="192.168.1.99" />
-                <button id="connectBtnWreath">Kết nối 🎄</button>
-                <div id="hint">Nhập IP server / agent trong LAN</div>
+                <button id="connectBtnWreath">Connect</button>
+                <div id="hint">Enter IP address</div>
             </div>
         </div>
     </div>
     
     <div class="bottom-links">
-        © Đồ án Mạng Máy Tính – Christmas LAN Remote ❄
+        © Đồ án Mạng Máy Tính – LAN Control System 
     </div>
     
-    <audio id="bellSound" src="bell.mp3" preload="auto"></audio>
+    <audio id="bellSound" src="../bell.mp3" preload="auto"></audio>
     
     <!-- Các thẻ <img> cho tuyết rơi sẽ được tạo bằng JavaScript -->
 </div>
@@ -276,12 +276,13 @@
 <!-- ======================= HEADER (Chứa IP đã nhập và Status) ======================= -->
 <header>
     <div class="app-title">
-        🎄 <span>Christmas</span> LAN Remote
+    <span class="lan-text">LAN</span> CONTROL SYSTEM
     </div>
+
     <div class="header-right">
         <div class="ip-label">
             <!-- [REUSE ID] Đây là IP Input chính được connection.js sử dụng -->
-            Server IP: <input id="serverIpInput" value="192.168.1.99" placeholder="Nhập IP (vd: 192.168.1.5)" style="background:transparent; border:none; color:white; width: 140px; outline: none; font-weight: bold;" readonly/>
+            Server IP: <input id="serverIpInput" value="192.168.1.99" placeholder="Enter IP (e.g., 192.168.1.5)" style="background:transparent; border:none; color:white; width: 140px; outline: none; font-weight: bold;" readonly/>
         </div>
         <div id="connectionStatus" style="display: flex; align-items: center; gap: 5px;">
             <span id="statusDot" class="status-dot status-disconnected"></span>
@@ -302,7 +303,7 @@
 
     <!-- 1. FORM SETUP (Yêu cầu Master Code) -->
     <div id="setup-form" class="auth-card hidden">
-        <h2>🔑 Master Setup Code</h2>
+        <h2>Master Setup Code</h2>
         <p style="color:#facc15; margin-bottom: 20px;">Nhập mã khóa để Đăng ký tài khoản mới.</p>
         <input type="password" id="master-code" placeholder="Master Code" onkeydown="if(event.key==='Enter') submitSetupCode()"/>
         <button class="btn btn-warning" id="btn-submit-setup">Xác nhận Master Code</button>
@@ -312,7 +313,7 @@
 
     <!-- 2. FORM REGISTER (Đăng ký tài khoản) -->
     <div id="register-form" class="auth-card hidden">
-        <h2>📝 Đăng Ký Tài Khoản</h2>
+        <h2>Đăng Ký Tài Khoản</h2>
         <p style="color:#388E3C; margin-bottom: 10px;">Đã xác nhận Master Code. Tạo tài khoản để truy cập!</p>
         <input type="text" id="reg-username" placeholder="Tên đăng nhập" />
         <input type="password" id="reg-password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter') registerUser()"/>
@@ -321,13 +322,13 @@
 
     <!-- 3. FORM LOGIN (Đăng nhập) -->
     <div id="login-form" class="auth-card hidden">
-        <h2>🚪 Đăng Nhập</h2>
+        <h2>Đăng Nhập</h2>
         <p style="color:#f0f0f0; margin-bottom: 20px;">Sử dụng tài khoản đã đăng ký.</p>
         <input type="text" id="login-username" placeholder="Tên đăng nhập" />
         <input type="password" id="login-password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter') loginUser()"/>
         <button class="btn btn-primary" id="btn-submit-login">Đăng Nhập</button>
         <!-- [THÊM NÚT CHUYỂN ĐỔI] -->
-        <div class="auth-toggle-link" onclick="showSetupForm()">Đăng ký tài khoản mới (cần Master Code)</div>
+        <div class="auth-toggle-link" onclick="showSetupForm()">Đăng ký tài khoản mới</div>
     </div>
 </div>
 
@@ -358,7 +359,9 @@
                         <h2 style="font-size:15px; margin-bottom:6px;">📦 Quản lý ứng dụng (List / Start / Stop)</h2>
                         <div class="section-actions">
                             <button class="btn btn-primary btn-sm" id="refreshAppsBtn">Lấy danh sách App</button>
-                            <input type="text" id="appNameInput" placeholder="Tên App (vd: notepad)" class="text-black px-2 py-1 rounded text-sm" style="width: 150px;">
+                            <!-- <input type="text" id="appNameInput" placeholder="Tên App (vd: notepad)" class="text-black px-2 py-1 rounded text-sm" style="width: 150px;"> -->
+                            <input type="text" id="appNameInput" placeholder="Tên App (vd: notepad)" class="app-input" />
+
                             <button class="btn btn-outline btn-sm" id="startAppBtn">Start App</button>
                             <button class="btn btn-outline btn-sm" id="stopSelectedAppBtn">Stop App đã chọn</button>
                         </div>
@@ -369,7 +372,7 @@
                                     <th style="width:30px;">Chọn</th>
                                     <th>PID</th>
                                     <th>Tên ứng dụng</th>
-                                    <th>Tiêu đề cửa sổ</th>
+                                    
                                     <th>RAM (MB)</th>
                                 </tr>
                                 </thead>
@@ -386,10 +389,12 @@
                         <h2 style="font-size:15px; margin-bottom:6px;">⚙ Quản lý tiến trình (List / Start / Stop)</h2>
                         <div class="section-actions">
                             <button class="btn btn-primary btn-sm" id="refreshProcessesBtn">Lấy danh sách Process</button>
-                            <input type="text" id="processNameInput"
+                            <!-- <input type="text" id="processNameInput"
                                 placeholder="Tên Process (vd: chrome.exe)"
                                 class="text-black px-2 py-1 rounded text-sm"
-                                style="width: 170px;">
+                                style="width: 170px;"> -->
+                            <input type="text" id="processNameInput" placeholder="Tên Process (vd: chrome.exe)" class="app-input" />
+
                             <button class="btn btn-outline btn-sm" id="startProcessBtn">Start Process</button>
                             <button class="btn btn-outline btn-sm" id="stopSelectedProcessBtn">Stop Process</button>
                         </div>
@@ -521,7 +526,7 @@
 
         for (let i = 0; i < numFlakes; i++) {
             const img = document.createElement("img");
-            img.src = "image/snow.png";
+            img.src = "../image/snow.png";
             img.className = "snowflake";
 
             const size = Math.random() * 25 + 20; 
