@@ -102,7 +102,7 @@ async function connect() {
     const candidates = buildConnectionUrlCandidates(rawIp);
     const finalUrl = candidates[0] || buildConnectionUrl(rawIp);
 
-    setStatus("Đang kết nối tới: " + finalUrl);
+    setStatus("Connecting to: " + finalUrl);
     
     // [FIX LỖI FLOW] Hiển thị LOADING_MESSAGE ngay lập tức khi bắt đầu kết nối
     handleServerStatus("LOADING_WAIT");
@@ -128,10 +128,10 @@ async function connect() {
             } else {
                 renderTable("processesTableBody", list, "selectedProcess");
             }
-            setStatus(`Đã tải ${list.length} mục.`);
+            setStatus(`Loaded ${list.length} items.`);
         } catch (e) {
-            console.error("Lỗi parse JSON:", e);
-            setStatus("Lỗi dữ liệu từ Server.");
+            console.error("Parse JSON error:", e);
+            setStatus("Server data error..");
         }
     });
 
@@ -181,7 +181,7 @@ async function connect() {
         
         if (type === "SCREENSHOT") {
             document.getElementById("screenPreview").src = src;
-            setStatus("Đã nhận ảnh màn hình.");
+            setStatus("Screen capture received.");
         } else if (type === "WEBCAM_LIVE") {
             if (cam) {
                 cam.src = src;
@@ -232,7 +232,7 @@ async function connect() {
         setServerKeycaptureHintFromHubUrl(url);
 
         for (let attempt = 1; attempt <= 4; attempt++) {
-            setStatus(`Đang kết nối tới: ${url} (thử ${attempt}/4)`);
+            setStatus(`Connectiing to: ${url} (test ${attempt}/4)`);
 
             connection = new signalR.HubConnectionBuilder()
                 .withUrl(url, {
@@ -251,7 +251,7 @@ async function connect() {
                 await connection.start();
                 isConnected = true;
                 updateConnectionUI(true);
-                setStatus("Kết nối thành công!");
+                setStatus("Successfully connected!");
 
                 await connection.invoke("GetServerStatus");
                 try { await connection.invoke("GetWebcamProofList"); } catch {}
@@ -276,7 +276,7 @@ async function connect() {
     if (!isConnected && lastErr) {
         console.error(lastErr);
         const errText = (lastErr && lastErr.toString) ? lastErr.toString() : String(lastErr);
-        setStatus("Kết nối thất bại: " + errText);
+        setStatus("Failed to connect: " + errText);
         // Avoid blocking alert popups; keep errors in status bar/console.
 
         // [SPA LOGIC] Nếu lỗi kết nối, quay lại màn hình Auth/Login
@@ -289,14 +289,14 @@ async function connect() {
     connection.onreconnecting(() => {
         isConnected = false;
         updateConnectionUI(false);
-        setStatus("Mất kết nối tạm thời, đang tự kết nối lại...");
+        setStatus("Reconnecting...");
         // Không ép về màn hình login; giữ UI hiện tại.
     });
 
     connection.onreconnected(async () => {
         isConnected = true;
         updateConnectionUI(true);
-        setStatus("Đã kết nối lại.");
+        setStatus("Reconnected.");
         try { await connection.invoke("GetServerStatus"); } catch {}
         try { await connection.invoke("GetWebcamProofList"); } catch {}
     });
@@ -304,7 +304,7 @@ async function connect() {
     connection.onclose(() => {
         isConnected = false;
         updateConnectionUI(false);
-        setStatus("Mất kết nối với Server.");
+        setStatus("Lost connection to the server.");
         if (authCheckTimer) {
             clearInterval(authCheckTimer);
             authCheckTimer = null;
@@ -382,7 +382,7 @@ function renderProofSelect() {
     if (!sel) return;
 
     const current = sel.value;
-    sel.innerHTML = `<option value="">(Chọn bằng chứng để phát)</option>`;
+    sel.innerHTML = `<option value="">(Choose evidence to play)</option>`;
 
     (webcamProofs || []).forEach(p => {
         const id = p.id || "";
@@ -423,17 +423,17 @@ async function registerUser() {
         if (p2El && p !== p2) {
             const msgEl = document.getElementById("authMessage");
             if (msgEl) {
-                msgEl.textContent = "[AUTH] Mật khẩu xác nhận không khớp.";
+                msgEl.textContent = "[AUTH] Passwords do not match.";
                 msgEl.classList.remove("hidden", "ok");
                 msgEl.classList.add("bad");
             } else {
-                alert("Mật khẩu xác nhận không khớp.");
+                alert("Passwords do not match.");
             }
             return;
         }
         // Sau khi đăng ký xong sẽ về login.
         preferredUnauthForm = "LOGIN";
-        setStatus("Đang đăng ký tài khoản...");
+        setStatus("Registering Account...");
         isRegistering = true;
         try {
             await connection.invoke("RegisterUser", u, p);
@@ -441,7 +441,7 @@ async function registerUser() {
             isRegistering = false;
         }
     } else {
-        alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
+        alert("Please enter both the username and password!");
     }
 }
 
@@ -452,10 +452,10 @@ async function loginUser() {
     const u = document.getElementById('login-username').value;
     const p = document.getElementById('login-password').value;
     if(u && p) {
-        setStatus("Đang xác thực đăng nhập...");
+        setStatus("Login authentication in progress...");
         await connection.invoke("Login", u, p);
     } else {
-        alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!");
+        alert("Please enter both the username and password!");
     }
 }
 
@@ -467,12 +467,12 @@ async function disconnect() {
     if (connection) await connection.stop();
     isConnected = false;
     updateConnectionUI(false);
-    setStatus("Đã ngắt kết nối.");
+    setStatus("Disconnected.");
 }
 
 function checkConn() {
     if (!isConnected) {
-        alert("Vui lòng kết nối tới Server trước!");
+        alert("Please connect to the server first!");
         return false;
     }
     return true;
@@ -510,14 +510,14 @@ function wireActionButtons() {
 
     document.getElementById("refreshAppsBtn").addEventListener("click", () => {
         if (checkConn()) {
-            setStatus("Đang tải danh sách App...");
+            setStatus("Loading application list...");
             connection.invoke("GetProcessList", true);
         }
     });
 
     document.getElementById("refreshProcessesBtn").addEventListener("click", () => {
         if (checkConn()) {
-            setStatus("Đang tải danh sách Process...");
+            setStatus("Loading process list...");
             connection.invoke("GetProcessList", false);
         }
     });
@@ -526,7 +526,7 @@ function wireActionButtons() {
         if (checkConn()) {
             const name = document.getElementById("appNameInput").value;
             if (name) connection.invoke("StartProcess", name);
-            else alert("Vui lòng nhập tên ứng dụng!");
+            else alert("Please enter Application name!");
         }
     });
 
@@ -534,7 +534,7 @@ function wireActionButtons() {
         if (checkConn()) {
             const name = document.getElementById("processNameInput").value;
             if (name) connection.invoke("StartProcess", name);
-            else alert("Vui lòng nhập tên hoặc đường dẫn Process!");
+            else alert("Please enter Process name or path!");
         }
     });
 
@@ -542,7 +542,7 @@ function wireActionButtons() {
         if (checkConn()) {
             const id = getSelectedId("selectedApp");
             if (id) connection.invoke("KillProcess", id);
-            else alert("Vui lòng chọn một App trong danh sách!");
+            else alert("Please select an App from the list!");
         }
     });
 
@@ -550,20 +550,20 @@ function wireActionButtons() {
         if (checkConn()) {
             const id = getSelectedId("selectedProcess");
             if (id) connection.invoke("KillProcess", id);
-            else alert("Vui lòng chọn một Process trong danh sách!");
+            else alert("Please select an Process from the list!");
         }
     });
 
     document.getElementById("captureScreenBtn").addEventListener("click", () => {
         if (checkConn()) {
-            setStatus("Đang yêu cầu chụp màn hình...");
+            setStatus("Requesting screen capture...");
             connection.invoke("GetScreenshot");
         }
     });
     
     document.getElementById("webcamOnBtn").addEventListener("click", () => {
         if (checkConn()) {
-            setStatus("Đang bật Webcam Live...");
+            setStatus("Starting live webcam...");
             isWebcamLive = true;
             connection.invoke("StartWebcamLive", 10);
         }
@@ -589,13 +589,13 @@ function wireActionButtons() {
         playProofBtn.addEventListener("click", () => {
             if (!checkConn()) return;
             if (isWebcamLive) {
-                alert("Hãy Stop webcam live trước khi phát bằng chứng.");
+                alert("Please stop the live webcam before playing the evidence.");
                 return;
             }
             const sel = document.getElementById("proofSelect");
             const id = sel ? sel.value : "";
             if (!id) {
-                alert("Chọn 1 bằng chứng trước.");
+                alert("Please select an evidence first.");
                 return;
             }
             connection.invoke("PlayWebcamProof", id);
@@ -631,21 +631,21 @@ function wireActionButtons() {
             const text = ("value" in el) ? el.value : (el.textContent || "");
             try {
                 await navigator.clipboard.writeText(text);
-                setStatus("Đã copy keylog.");
+                setStatus("Copied keylog.");
             } catch {
-                alert("Copy thất bại (trình duyệt chặn Clipboard).");
+                alert("Failed to copy (The browser has blocked Clipboard access.).");
             }
         });
     }
 
     document.getElementById("restartBtn").addEventListener("click", () => {
-        if (checkConn() && confirm("CẢNH BÁO: Bạn có chắc muốn RESTART máy Server ngay lập tức?")) {
+        if (checkConn() && confirm("WARNING: Are you sure you want to RESTART the server machine immediately?")) {
             connection.invoke("ShutdownServer", true);
         }
     });
 
     document.getElementById("shutdownBtn").addEventListener("click", () => {
-        if (checkConn() && confirm("CẢNH BÁO: Bạn có chắc muốn TẮT MÁY Server ngay lập tức?")) {
+        if (checkConn() && confirm("WARNING: Are you sure you want to SHUTDOWN the server machine immediately?")) {
             connection.invoke("ShutdownServer", false);
         }
     });
@@ -666,7 +666,7 @@ function wireActionButtons() {
             // 2. Check xem dịch vụ AI độc lập đã tải chưa (ai_service.js)
             if (!window.chatWithGemini) {
                 // [FIX LỖI AI] Sử dụng logic báo lỗi AI chưa tải
-                if(window.ui) ui.addChatMessage("⚠️ Dịch vụ Snowie AI chưa được tải (Vui lòng kiểm tra file ai_service.js)!", 'bot');
+                if(window.ui) ui.addChatMessage("⚠️ Snowie AI service has not been loaded (please check the ai_service.js file)!", 'bot');
                 return;
             }
 
@@ -681,7 +681,7 @@ function wireActionButtons() {
             }).catch(err => {
                 if(window.ui) {
                     ui.showTyping(false);
-                    ui.addChatMessage("Lỗi AI: " + err.toString(), 'bot');
+                    ui.addChatMessage("AI error: " + err.toString(), 'bot');
                 }
             });
         });

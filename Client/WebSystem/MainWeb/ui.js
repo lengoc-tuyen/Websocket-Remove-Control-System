@@ -16,13 +16,13 @@ function updateConnectionUI(connected) {
     if (connected) {
         statusDot.className = "status-dot status-connected";
         statusText.textContent = "Connected";
-        toggleConnectBtn.textContent = "Ngắt kết nối";
+        toggleConnectBtn.textContent = "Disconnect";
         toggleConnectBtn.classList.remove("btn-primary");
         toggleConnectBtn.classList.add("btn-danger");
     } else {
         statusDot.className = "status-dot status-disconnected";
         statusText.textContent = "Disconnected";
-        toggleConnectBtn.textContent = "Kết nối";
+        toggleConnectBtn.textContent = "Connect";
         toggleConnectBtn.classList.add("btn-primary");
         toggleConnectBtn.classList.remove("btn-danger");
     }

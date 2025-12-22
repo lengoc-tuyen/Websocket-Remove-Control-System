@@ -9,7 +9,18 @@
         body {
             font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
             min-height: 100vh;
-            background: radial-gradient(circle at top, #b91c1c 0, #450a0a 60%);
+            background-image: 
+              linear-gradient(
+                rgba(0,0,0,0.45),
+                rgba(0,0,0,0.65)
+              ),
+              url("https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=2070&auto=format&fit=crop");
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+
             color: #fef2f2;
             display: flex;
             justify-content: center;
@@ -18,6 +29,7 @@
             position: relative;
             overflow: hidden;
         }
+
         body::before {
             content: "";
             position: fixed; inset: 0;
@@ -32,14 +44,45 @@
         .card {
             position: relative; z-index: 1;
             max-width: 760px; width: 100%;
-            background: rgba(15, 23, 42, 0.96);
+            background: rgba(10, 15, 30, 0.88);
+            backdrop-filter: blur(6px);
             border-radius: 18px;
             padding: 24px 22px 18px;
             box-shadow: 0 22px 40px rgba(0,0,0,0.7);
             border: 1px solid rgba(248, 250, 252, 0.25);
         }
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        .accent { color: #22c55e; }
+        h1 { font-size: 32px; margin-bottom: 8px; }
+.accent{
+  color: #127931;        /* đỏ đậm */
+  font-weight: 900;
+  letter-spacing: 0.6px;
+
+  /* viền sáng trắng + glow */
+  text-shadow:
+    0 0 2px rgba(255,255,255,0.95),
+    0 0 6px rgba(255,255,255,0.85),
+    0 0 12px rgba(255,255,255,0.65),
+    0 0 22px rgba(255,255,255,0.45);
+
+  animation: whiteGlowPulse 3s ease-in-out infinite;
+}
+
+@keyframes whiteGlowPulse{
+  0%, 100%{
+    text-shadow:
+      0 0 2px rgba(255,255,255,0.9),
+      0 0 6px rgba(255,255,255,0.75),
+      0 0 12px rgba(255,255,255,0.55),
+      0 0 20px rgba(255,255,255,0.35);
+  }
+  50%{
+    text-shadow:
+      0 0 3px rgba(255,255,255,1),
+      0 0 10px rgba(255,255,255,0.9),
+      0 0 20px rgba(255,255,255,0.75),
+      0 0 36px rgba(255,255,255,0.55);
+  }
+}
         h2 { font-size: 17px; margin-top: 14px; margin-bottom: 6px; }
         p { font-size: 14px; margin: 4px 0; color: #e5e7eb; }
         ol, ul { margin-left: 20px; font-size: 14px; }
@@ -50,25 +93,27 @@
             color: #facc15;
         }
         .actions {
-            margin-top: 14px;
+            margin-top: 18px;
             display: flex;
+            align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+        }
+        .actions.spread {
+          justify-content: space-between;
         }
         a.btn {
             text-decoration: none;
             font-size: 13px;
             padding: 6px 12px;
             border-radius: 999px;
-            border: 1px solid #22c55e;
-            color: #bbf7d0;
+            border: 1px solid #a12f2f;
+            color: #f97316;
             background: transparent;
             transition: 0.18s;
         }
         a.btn.primary {
-            background: #22c55e;
-            color: #052e16;
+            background: linear-gradient(180deg, #d62424, #651212);
+            color: #f8fafc;
         }
         a.btn:hover {
             transform: translateY(-1px);
@@ -276,6 +321,7 @@
   transform: translateY(10px) !important;
 }
 
+
     </style>
 
 <!-- Snowman Chatbot CSS -->
@@ -283,38 +329,38 @@
 </head>
 <body>
 <div class="card">
-    <h1>🎅 Hướng dẫn sử dụng <span class="accent">LAN Remote Control</span></h1>
-    <p>Dưới đây là luồng sử dụng cơ bản của ứng dụng (ở mức người dùng cuối):</p>
+    <h1><span class="accent">Usage Instruction</span></h1>
+    <!-- <p>Dưới đây là luồng sử dụng cơ bản của ứng dụng (ở mức người dùng cuối):</p> -->
 
-    <h2>1. Chuẩn bị</h2>
+    <h2>1. Prepare</h2>
     <ul>
-        <li>Các máy phải nằm trong <strong>cùng mạng LAN</strong>.</li>
-        <li>Trên máy bị điều khiển cần chạy chương trình <strong>Agent</strong>.</li>
-        <li>Trên máy điều khiển sẽ mở trình duyệt chạy <strong>Web App Giáng Sinh</strong>.</li>
+        <li>All machines must be connected to the same Local Area Network (LAN).</li>
+        <li>Follow the instructions in the <code>README.md</code> file.</li>
     </ul>
 
-    <h2>2. Kết nối</h2>
-    <ol>
-        <li>Mở trang web chính của ứng dụng.</li>
-        <li>Nhập <strong>địa chỉ IP</strong> của server/WebSocket hoặc của máy Agent (tuỳ thiết kế).</li>
-        <li>Nhấn nút <strong>Kết nối</strong> để thiết lập kết nối realtime.</li>
-    </ol>
-
-    <h2>3. Các chức năng chính trên web</h2>
+    <h2>2. Connect</h2>
     <ul>
-        <li><strong>Camera:</strong> xem luồng video từ camera của máy bị điều khiển.</li>
-        <li><strong>Screen:</strong> yêu cầu chụp màn hình và hiển thị ảnh mới nhất.</li>
-        <li><strong>Keylogger:</strong> xem danh sách các phím đã được Agent ghi lại.</li>
-        <li><strong>Power:</strong> gửi lệnh <em>Restart</em> hoặc <em>Shutdown</em> máy từ xa.</li>
+        <li>Open the main web page of the project.</li>
+        <li>Enter the IP address of the server / WebSocket.</li>
+        <li>Click the Connect button to establish a real-time connection.</li>
+        <li>Log in using an existing username and password, or enter the Master Code to create a new account.</li>
+    </ul>
+
+    <h2>3. Key Web Features</h2>
+    <ul>
+        <li><strong>Camera:</strong> view the live video stream from the webcam of the controlled machine.</li>
+        <li><strong>Screen:</strong> request a screen capture and display the latest captured image.</li>
+        <li><strong>Keylogger:</strong> Start/stop the keylogger, view the list of keystrokes recorded by the agent, and clear the captured logs.</li>
+        <li><strong>Power:</strong> send remote <em>Restart</em> or <em>Shutdown</em> commands to the machine.</li>
     </ul>
 
     <p class="note">
-        ⚠ Lưu ý: Ứng dụng chỉ dùng cho mục đích học tập, thí nghiệm trong môi trường
-        kiểm soát (phòng lab, LAN nội bộ) và phải được <strong>cho phép</strong> từ người sở hữu máy.
+        ⚠ Note: This application is intended for educational and experimental purposes only, within a controlled environment (laboratory or internal LAN), 
+        and must be used with the permission of the machine owner.
     </p>
 
-    <div class="actions">
-        <a href="begin.html" class="btn">⬅ Back</a>
+    <div class="actions spread">
+        <a href="begin.html" class="btn primary">⬅ Back</a>
         <a href="MainWeb/index.html" class="btn primary">Next ➜</a>
     </div>
 </div>

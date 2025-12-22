@@ -9,7 +9,18 @@
         body {
             font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
             min-height: 100vh;
-            background: linear-gradient(160deg, #022c22, #0f172a);
+            background-image:
+                linear-gradient(
+                    rgba(2, 44, 34, 0.55),
+                    rgba(15, 23, 42, 0.75)
+                ),
+                url("https://scontent.fsgn5-3.fna.fbcdn.net/v/t1.15752-9/598562339_1901481437459574_2244473116312851599_n.png?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFkzX8Nhq3jWqX2djHMribr0FSS_uWHCz3QVJL-5YcLPQ-0yzRRAGgV8s8gG6EjM7wGcyWB77JYFIx5POg8izbt&_nc_ohc=TnH7IBLx1twQ7kNvwE1EdQf&_nc_oc=AdmPgaJDpO9TND9Hi2zNfz_Fx9gKqItvVfK_gSUs4hnfvCXheKxpiKUQYQcS8cgkP34kF8dCel_lbXMce7XjAtmv&_nc_zt=23&_nc_ht=scontent.fsgn5-3.fna&oh=03_Q7cD4AG0dK7HzbIxFQaVCYTKsZ2T6LsaIVPexTo-SjnJrICnwA&oe=696F6857");
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+
             color: #f9fafb;
             display: flex;
             justify-content: center;
@@ -18,6 +29,7 @@
             position: relative;
             overflow: hidden;
         }
+
         body::before {
             content: "";
             position: fixed; inset: 0;
@@ -34,17 +46,51 @@
             z-index: 1;
             max-width: 720px;
             width: 100%;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(10, 20, 40, 0.88);
+            backdrop-filter: blur(6px);;
             border-radius: 18px;
             padding: 24px 20px 18px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
             border: 1px solid rgba(148, 163, 184, 0.4);
         }
         h1 {
-            font-size: 24px;
+            font-size: 32px;
             margin-bottom: 10px;
         }
-        .accent { color: #f97316; }
+/* ===== RED TEXT + WHITE GLOW OUTLINE ===== */
+.accent{
+  color: #ac1414;        /* đỏ đậm */
+  font-weight: 900;
+  letter-spacing: 0.6px;
+
+  /* viền sáng trắng + glow */
+  text-shadow:
+    0 0 2px rgba(255,255,255,0.95),
+    0 0 6px rgba(255,255,255,0.85),
+    0 0 12px rgba(255,255,255,0.65),
+    0 0 22px rgba(255,255,255,0.45);
+
+  animation: whiteGlowPulse 3s ease-in-out infinite;
+}
+
+@keyframes whiteGlowPulse{
+  0%, 100%{
+    text-shadow:
+      0 0 2px rgba(255,255,255,0.9),
+      0 0 6px rgba(255,255,255,0.75),
+      0 0 12px rgba(255,255,255,0.55),
+      0 0 20px rgba(255,255,255,0.35);
+  }
+  50%{
+    text-shadow:
+      0 0 3px rgba(255,255,255,1),
+      0 0 10px rgba(255,255,255,0.9),
+      0 0 20px rgba(255,255,255,0.75),
+      0 0 36px rgba(255,255,255,0.55);
+  }
+}
+
+
         p { margin: 6px 0; font-size: 14px; line-height: 1.5; color: #e5e7eb; }
         ul { margin: 8px 0 6px 18px; font-size: 14px; }
         li { margin-bottom: 4px; }
@@ -58,25 +104,27 @@
             margin-bottom: 4px;
         }
         .actions {
-            margin-top: 14px;
+            margin-top: 18px;
             display: flex;
+            align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+        }
+        .actions.spread {
+          justify-content: space-between;
         }
         a.btn {
             text-decoration: none;
             font-size: 13px;
             padding: 6px 12px;
             border-radius: 999px;
-            border: 1px solid #f97316;
+            border: 1px solid #42c0a0;
             color: #f97316;
             background: transparent;
             transition: 0.18s;
         }
         a.btn.primary {
-            background: #f97316;
-            color: #111827;
+            background: linear-gradient(180deg, #15803d, #126535);
+            color: #f8fafc;
         }
         a.btn:hover {
             transform: translateY(-1px);
@@ -284,6 +332,23 @@
   transform: translateY(10px) !important;
 }
 
+/* Strong text -> green instead of just bold */
+strong{
+  color: #2c9c55;        /* xanh lá tươi (green-500) */
+  font-weight: 800;      /* vẫn đậm */
+}
+
+/* Strong nhưng KHÔNG xanh (riêng cho Keylogger) */
+strong.no-green{
+  color: #f9fafb;     /* trắng như text thường */
+  font-weight: 900;   /* vẫn đậm */
+  text-shadow: none;  /* bỏ glow xanh nếu có */
+}
+
+
+
+
+
     </style>
     
     <!-- Snowman Chatbot CSS -->
@@ -291,32 +356,35 @@
 </head>
 <body>
 <div class="card">
-    <h1>🎄 Giới thiệu đồ án <span class="accent">Mạng Máy Tính</span></h1>
+    <h1><span class="accent">Introduction </span> </h1>
     <p>
-        Đây là đồ án môn Mạng Máy Tính với mục tiêu xây dựng một ứng dụng web cho phép
-        <strong>điều khiển máy tính từ xa trong mạng LAN</strong>, lấy cảm hứng từ TeamViewer, được thiết kế
-        theo chủ đề <strong>Giáng Sinh</strong> để giao diện sinh động và dễ nhớ hơn.
+        This is a Computer Networks course project with the objective of building a web application that allows
+        <strong>to remotely control computers within a local area network (LAN)</strong>, Inspired by TeamViewer, the application is designed 
+        with a <strong>Christmas</strong> theme to create a more vivid and memorable user interface.
     </p>
-    <p>Các chức năng chính phía backend và agent (máy bị điều khiển):</p>
+    <p>Main Functionalities of the Backend and Agent (Controlled Machine):</p>
     <ul>
-        <li>Bật/tắt <strong>Webcamera</strong> trên máy Server, record và gửi về Client video.</li>
-        <li><strong>Keylog</strong>: bắt phím gõ trên máy Server (qua trang local <code>/server-keycapture</code>) và relay realtime về Client (không phải keylogger toàn hệ thống).</li>
-        <li><strong>Chụp màn hình</strong> từ xa và gửi về web.</li>
-        <li>Gửi lệnh <strong>Restart</strong> và <strong>Shutdown</strong> máy trong LAN.</li>
-        <li>Kết nối realtime bằng <strong>WebSocket / Socket</strong>.</li>
+        <li><strong class="no-green"></strong>Enable/disable the <strong>Webcam</strong> on the server machine, record video, and stream it to the client.</li>
+        <li>
+    Keylogger :
+    <ul>
+        <li>
+            macOS : Capture keystrokes on the server machine via a local web page
+            (<code>/server-keycapture</code>) and relay them to the client in real time
+            (not a system-wide keylogger).
+        </li>
+        <li>
+            Windows : Capture all keystrokes system-wide.
+        </li>
     </ul>
-    <!-- <p>
-        Phần của đồ án mà trang này tập trung là <strong>frontend web</strong>: thiết kế giao diện người dùng,
-        luồng các trang, và cách hiển thị/điều khiển các chức năng trên nền Giáng Sinh.
-    </p>
-    <div class="chips">
-        <span class="chip">WebSocket</span>
-        <span class="chip">LAN Only</span>
-        <span class="chip">Christmas Theme</span>
-        <span class="chip">Remote Control</span>
-    </div> -->
-    <div class="actions">
-        <a href="begin.html" class="btn">⬅ Back</a>
+    </li>
+
+        <li>Capture the screen : remotely and send it to the web client.</li>
+        <li>Send <strong>Restart</strong> and <strong>Shutdown</strong> commands to machines within the LAN.</li>
+        <li>Establish real-time connections using <strong>WebSocket / Socket</strong>.</li>
+    </ul>
+    <div class="actions spread">
+        <a href="begin.html" class="btn primary">⬅ Back</a>
         <a href="MainWeb/index.html" class="btn primary">Next ➜</a>
     </div>
 </div>
