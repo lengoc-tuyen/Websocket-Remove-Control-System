@@ -50,12 +50,12 @@ namespace Server.Services
                         _users.Clear();
                         _users.AddRange(loadedUsers);
                     }
-                    Console.WriteLine($"[UserRepo] Đã tải {loadedUsers.Count} người dùng từ {USER_FILE_PATH} (TXT format).");
+                    Console.WriteLine($"[UserRepo] Loaded {loadedUsers.Count} users from {USER_FILE_PATH} (TXT format).");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[UserRepo ERROR] Lỗi tải dữ liệu người dùng: {ex.Message}");
+                Console.WriteLine($"[UserRepo ERROR] Failed to load user data: {ex.Message}");
             }
         }
 
@@ -73,11 +73,11 @@ namespace Server.Services
                 File.WriteAllLines(temp, lines);
                 File.Move(temp, USER_FILE_PATH, overwrite: true);
 
-                Console.WriteLine($"[UserRepo] Đã lưu {lines.Length} người dùng vào {USER_FILE_PATH}.");
+                Console.WriteLine($"[UserRepo] Saved {lines.Length} users to {USER_FILE_PATH}.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[UserRepo ERROR] Lỗi lưu dữ liệu người dùng: {ex.Message}");
+                Console.WriteLine($"[UserRepo ERROR] Error saving user data: {ex.Message}");
             }
         }
 

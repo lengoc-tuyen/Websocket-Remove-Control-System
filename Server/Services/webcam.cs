@@ -91,7 +91,7 @@ namespace Server.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi chụp màn hình");
+                _logger.LogError(ex, "Fail to capture screen");
                 return Array.Empty<byte>();
             }
         }
@@ -109,7 +109,7 @@ namespace Server.Services
                 // Nếu muốn ưu tiên file cấu hình thì bỏ comment dòng dưới:
                 // if (_settings.ProofDurationMs > 0) durationMs = _settings.ProofDurationMs;
 
-                _logger.LogInformation($"Bắt đầu quay Webcam trong {durationMs}ms...");
+                _logger.LogInformation($"Start to record Webcam in {durationMs}ms...");
 
                 // Linux
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -130,12 +130,12 @@ namespace Server.Services
                     return await CaptureVideoFramesMacOS(durationMs / 1000.0, frameRate, cancellationToken);
                 }
 
-                _logger.LogWarning("Không hỗ trợ quay video trên nền tảng này.");
+                _logger.LogWarning("Video recording is not supported on this platform.");
                 return new List<byte[]>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi quay video bằng chứng");
+                _logger.LogError(ex, "Failed to record evidence video");
                 return new List<byte[]>();
             }
         }
@@ -163,7 +163,7 @@ namespace Server.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi quay batch video");
+                _logger.LogError(ex, "Failed to record batch video");
                 return new List<byte[]>();
             }
         }
@@ -269,7 +269,7 @@ namespace Server.Services
 
                     if (!_webcamCapture.IsOpened())
                     {
-                        _logger.LogWarning("Không thể mở thiết bị Webcam (Index 0).");
+                        _logger.LogWarning("Unable to open the webcam device (Index 0).");
                         _webcamCapture.Dispose();
                         _webcamCapture = null;
                         return false;
@@ -279,12 +279,12 @@ namespace Server.Services
                     _webcamCapture.Set(VideoCaptureProperties.FrameWidth, _settings.DefaultFrameWidth);
                     _webcamCapture.Set(VideoCaptureProperties.FrameHeight, _settings.DefaultFrameHeight);
 
-                    _logger.LogInformation("Webcam đã mở (OpenCV): {W}x{H}", _settings.DefaultFrameWidth, _settings.DefaultFrameHeight);
+                    _logger.LogInformation("Webcam has opened (OpenCV): {W}x{H}", _settings.DefaultFrameWidth, _settings.DefaultFrameHeight);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Lỗi khi mở Webcam OpenCV");
+                    _logger.LogError(ex, "Failed to open Webcam OpenCV");
                     _webcamCapture?.Dispose();
                     _webcamCapture = null;
                     return false;
@@ -300,7 +300,7 @@ namespace Server.Services
                 {
                     if (_webcamCapture.IsOpened()) _webcamCapture.Release();
                     _webcamCapture.Dispose();
-                    _logger.LogInformation("Webcam đã đóng.");
+                    _logger.LogInformation("Webcam has closed.");
                 }
                 catch { }
                 finally { _webcamCapture = null; }
@@ -317,7 +317,7 @@ namespace Server.Services
                 
                 if (!_webcamCapture.Read(frame) || frame.Empty())
                 {
-                    _logger.LogWarning("Đọc frame thất bại.");
+                    _logger.LogWarning("Failed to read frame.");
                     CloseWebcamInternal(); 
                     return null;
                 }
@@ -347,7 +347,7 @@ namespace Server.Services
                     if (frame != null && frame.Length > 0) frames.Add(frame);
                     await Task.Delay(delayMs, ct);
                 }
-                _logger.LogInformation("OpenCV: Đã quay {Count} frames.", frames.Count);
+                _logger.LogInformation("OpenCV: Recorded {Count} frames.", frames.Count);
             }
             finally 
             {
@@ -387,7 +387,7 @@ namespace Server.Services
                 {
                     if (process.StartInfo.FileName.Length == 0) continue;
                     
-                    _logger.LogInformation("Khởi động FFmpeg Stream (Candidate)...");
+                    _logger.LogInformation("Start FFmpeg Stream (Candidate)...");
                     if (!process.Start()) continue;
                     
                     startedAny = true;
@@ -409,12 +409,12 @@ namespace Server.Services
                         return;
                     }
 
-                    _logger.LogError("Lỗi luồng FFmpeg: " + ex.Message);
+                    _logger.LogError("Stream erroe FFmpeg: " + ex.Message);
                     try { if (!process.HasExited) process.Kill(); } catch {}
                 }
             }
 
-            if (!startedAny) writer.TryComplete(new Exception("Không thể khởi động FFmpeg stream."));
+            if (!startedAny) writer.TryComplete(new Exception("Cannot start FFmpeg stream."));
         }
 
         private List<Process> CreateFfmpegWebcamProcessCandidates(int fps)

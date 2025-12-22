@@ -60,7 +60,7 @@ namespace Server.Services
 	            if (string.IsNullOrWhiteSpace(master))
 	            {
 	                throw new InvalidOperationException(
-	                    "Thiếu biến môi trường AUTH_MASTER_CODE. Hãy set AUTH_MASTER_CODE trước khi chạy Server.");
+	                    "Missing environment variable AUTH_MASTER_CODE. Please set AUTH_MASTER_CODE before starting the server.");
 	            }
 	            _masterSetupCode = master;
 
